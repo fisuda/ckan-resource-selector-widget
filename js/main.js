@@ -15,6 +15,7 @@
     'timestamp': 'date'
   }
 
+
   ////////////
   //AUXILIAR//
   ////////////
@@ -39,9 +40,10 @@
 
   }
 
-  var set_connect_to = function() {
-    connection_info.innerHTML = 'Connected to ' + ckan_server;
+  var set_connected_to = function() {
+    connection_info.innerHTML = 'CKAN Server: ' + ckan_server;
   }
+
 
   ///////////////////////
   //GET THE PREFERENCES//
@@ -50,7 +52,7 @@
   var prefHandler = function(preferences) {
     ckan_server = preferences[preference_ckan_server];
     loadDataSets();
-    set_connect_to();
+    set_connected_to();
   }
 
   MashupPlatform.prefs.registerCallback(prefHandler);
@@ -183,8 +185,14 @@
 
     //Create the title
     title = document.createElement('h3');
-    title.innerHTML = 'CKAN Instance DataSets';
+    title.innerHTML = 'CKAN Instance DataSets ';
     layout.getCenterContainer().appendChild(title);
+
+    // Update Icon
+    var updateIcon = document.createElement('i');
+    updateIcon.className = 'icon-refresh pointer-cursor';
+    updateIcon.addEventListener('click', loadDataSets.bind(this));
+    title.appendChild(updateIcon);
 
     //Create the dataset select
     dataset_select = new StyledElements.StyledSelect({'class': 'full'});
@@ -208,7 +216,7 @@
 
     //Create the bottom information info
     connection_info = document.createElement('p');
-    set_connect_to();
+    set_connected_to();
     layout.getSouthContainer().appendChild(connection_info);
 
     //Repaint is needed

@@ -5,3 +5,7 @@ div.full {
 h3, p {
     margin: 5px 5px 5px 5px;
 }
+
+.pointer-cursor {
+    cursor: pointer;
+}
