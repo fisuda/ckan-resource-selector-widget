@@ -3,7 +3,9 @@
   'use strict';
 
   var preference_ckan_server = 'ckan_server'
+  var preference_auth_token = 'auth_token'
   var ckan_server = MashupPlatform.prefs.get(preference_ckan_server);
+  var auth_token = MashupPlatform.prefs.get(preference_auth_token);
   var layout, dataset_select, resource_select, resource_select_title, connection_info, title, error;
 
   //CKAN types must be transformed in JS types
@@ -26,6 +28,10 @@
     
     MashupPlatform.http.makeRequest(url, {
       method: method,
+
+      requestHeaders: {
+        Authorization: auth_token
+      },
       
       onSuccess: function(response) {
         layout.getCenterContainer().enable();
@@ -50,7 +56,8 @@
   ///////////////////////
 
   var prefHandler = function(preferences) {
-    ckan_server = preferences[preference_ckan_server];
+    ckan_server = preference_ckan_server in preferences ? preferences[preference_ckan_server] : ckan_server;
+    auth_token = preference_auth_token in preferences ? preferences[preference_auth_token] : auth_token;
     loadDataSets();
     set_connected_to();
   }

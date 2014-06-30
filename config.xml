@@ -19,6 +19,7 @@
     <!-- Platform.Preferences element. It defines user preferences -->
     <Platform.Preferences>
         <Preference name="ckan_server" type="text" description="CKAN Server URL" label="CKAN Server URL" default="http://perseo.ls.fi.upm.es:8080"/>
+        <Preference name="auth_token" type="text" description="CKAN Authorization Token" label="CKAN Authorization Token" default=""/>
     </Platform.Preferences>
 
     <!-- Platform.StateProperties element. It defines user preferences -->
