@@ -118,11 +118,12 @@
   }
 
   var insertDatasets = function(response) {
-    var datasets = JSON.parse(response.responseText);
+    var response = JSON.parse(response.responseText);
+    var datasets = response['result']['results']
     var entries = [];
 
     for (var i = 0; i < datasets.length; i++) {
-      entries.push({label: datasets[i], value: datasets[i]})
+      entries.push({label: datasets[i]['title'], value: datasets[i]['name']})
     }
 
     dataset_select.addEntries(entries)
@@ -177,7 +178,7 @@
     hideError();                          //Hide error message
 
     //Fullfill the list of datasets
-    make_request(ckan_server + '/api/rest/dataset', 'GET', insertDatasets, showError);
+    make_request(ckan_server + '/api/3/action/dataset_search', 'GET', insertDatasets, showError);
   }
 
 
