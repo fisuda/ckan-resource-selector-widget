@@ -80,7 +80,7 @@
     resource_select_title.innerHTML = 'Select the resource from the <strong>' + dataset_name + 
         '</strong> dataset that you want to be displayed';
 
-    make_request(ckan_server + '/api/rest/dataset/' + dataset_id, 'GET', insertResources, showError);
+    make_request(ckan_server + '/api/action/dataset_show?id=' + dataset_id, 'GET', insertResources, showError);
   }
 
   var resourceSelectChange = function() {
@@ -143,7 +143,7 @@
 
   var insertResources = function(response) {
     var dataset = JSON.parse(response.responseText);
-    var resources = dataset['resources'];
+    var resources = dataset['result']['resources'];
     var entries = [];
 
     for (var i = 0; i < resources.length; i++) {
