@@ -4,9 +4,11 @@
 
   var preference_ckan_server = 'ckan_server'
   var preference_auth_token = 'auth_token'
+  var preference_limit_rows = 'limit_rows'
   var ckan_server = MashupPlatform.prefs.get(preference_ckan_server);
   var auth_token = MashupPlatform.prefs.get(preference_auth_token);
-  var layout, dataset_select, resource_select, resource_select_title, connection_info, title, error, load_more;
+  var limit_rows = MashupPlatform.prefs.get(preference_limit_rows);
+  var layout, dataset_select, resource_select, resource_select_title, connection_info, title, error, load_more, warn;
   var page = 0;
   var MAX_ROWS = 10;
 
@@ -60,6 +62,7 @@
   var prefHandler = function(preferences) {
     ckan_server = preference_ckan_server in preferences ? preferences[preference_ckan_server] : ckan_server;
     auth_token = preference_auth_token in preferences ? preferences[preference_auth_token] : auth_token;
+    limit_rows = preference_limit_rows in preferences ? preferences[preference_limit_rows] : limit_rows;
     loadInitialDataSets();
     set_connected_to();
   }
@@ -75,7 +78,7 @@
     var dataset_id = dataset_select.getValue();
     var dataset_name = dataset_select.getLabel();
 
-    hideError();                            //Hide error message
+    hideErrorAndWarn();                     //Hide error message
     resource_select.clear();                // Remove old resources
     resource_select_title.innerHTML = 'Select the resource from the <strong>' + dataset_name + 
         '</strong> dataset that you want to be displayed';
@@ -84,8 +87,9 @@
   }
 
   var resourceSelectChange = function() {
-    hideError();  //Hide error message
-    make_request(ckan_server + '/api/action/datastore_search?resource_id=' + resource_select.getValue(), 'GET', pushResourceData, showError);
+    hideErrorAndWarn();  //Hide error message
+    make_request(ckan_server + '/api/action/datastore_search?limit=' + limit_rows + 
+        '&resource_id=' + resource_select.getValue(), 'GET', pushResourceData, showError);
   }
 
 
@@ -112,7 +116,16 @@
       }
 
       //Push the data through the wiring
-      MashupPlatform.wiring.pushEvent('resource', JSON.stringify(finalData));  
+      MashupPlatform.wiring.pushEvent('resource', JSON.stringify(finalData));
+
+      //Show warn message if limit_rows < resource elements
+      var resource_total = resource['result']['total'];
+      if (resource_total > limit_rows) {
+        showWarn('<strong>WARNING:</strong> The number of records of the resource is higher ' +
+          'that the max number of elements to retrieve. If you want to see all the records, ' +
+          'increase the max number of elements to retrieve by editing the widget settings. ' + 
+          '<br/>Current Value: ' + limit_rows + ' - Resource elements: ' + resource_total)
+      }
 
     } else {
       showError();
@@ -161,6 +174,11 @@
   //SHOW/HIDE ERROR MESSAGE//
   ///////////////////////////
 
+  var showWarn = function(msg) {
+    warn.innerHTML = msg
+    $(warn).removeClass('hidden');
+  }
+
   var showError = function(e) {
 
     if (e && e.status && e.statusText) {
@@ -172,8 +190,9 @@
     $(error).removeClass('hidden');
   }
 
-  var hideError = function(e) {
+  var hideErrorAndWarn = function(e) {
     $(error).addClass('hidden');
+    $(warn).addClass('hidden');
   }
 
 
@@ -191,7 +210,7 @@
     dataset_select.clear();               //Remove previous datasets
     resource_select.clear();              //Remove associated resources to the dataset
     resource_select_title.innerHTML = ''  //Remove dataset name
-    hideError();                          //Hide error message
+    hideErrorAndWarn();                   //Hide error message
     $(load_more).removeClass('hidden');   //Display the load_more button
     page = 0;                             //Reset the page number
 
@@ -247,6 +266,10 @@
     error.setAttribute('class', 'alert alert-danger');
     layout.getCenterContainer().appendChild(error);
 
+    //Create the warn div
+    warn = document.createElement('div');
+    warn.setAttribute('class', 'alert alert-warn');
+    layout.getCenterContainer().appendChild(warn);
 
     //Create the bottom information info
     connection_info = document.createElement('p');

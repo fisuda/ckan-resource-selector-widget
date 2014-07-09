@@ -20,6 +20,7 @@
     <Platform.Preferences>
         <Preference name="ckan_server" type="text" description="CKAN Server URL" label="CKAN Server URL" default="http://perseo.ls.fi.upm.es:8080"/>
         <Preference name="auth_token" type="text" description="CKAN Authorization Token" label="CKAN Authorization Token" default=""/>
+        <Preference name="limit_rows" type="text" description="Maximum number of rows to return" label="Number of rows to retrieve (resources)" default="100"/>
     </Platform.Preferences>
 
     <!-- Platform.StateProperties element. It defines user preferences -->
