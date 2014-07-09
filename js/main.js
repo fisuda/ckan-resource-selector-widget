@@ -6,7 +6,9 @@
   var preference_auth_token = 'auth_token'
   var ckan_server = MashupPlatform.prefs.get(preference_ckan_server);
   var auth_token = MashupPlatform.prefs.get(preference_auth_token);
-  var layout, dataset_select, resource_select, resource_select_title, connection_info, title, error;
+  var layout, dataset_select, resource_select, resource_select_title, connection_info, title, error, load_more;
+  var page = 0;
+  var MAX_ROWS = 10;
 
   //CKAN types must be transformed in JS types
   //to be used across the different widgets
@@ -58,7 +60,7 @@
   var prefHandler = function(preferences) {
     ckan_server = preference_ckan_server in preferences ? preferences[preference_ckan_server] : ckan_server;
     auth_token = preference_auth_token in preferences ? preferences[preference_auth_token] : auth_token;
-    loadDataSets();
+    loadInitialDataSets();
     set_connected_to();
   }
 
@@ -126,9 +128,17 @@
       entries.push({label: datasets[i]['title'], value: datasets[i]['name']})
     }
 
-    dataset_select.addEntries(entries)
+    dataset_select.addEntries(entries);
 
-    datasetSelectChange();                //First call
+    //Hide the add load more datasets button if we get less than MAX_ROWS records
+    if (datasets.length < MAX_ROWS) {
+      $(load_more).addClass('hidden');
+    }
+
+    //A selected resource means that a dataset is already chosen so we mustn't load a new one
+    if (!resource_select.getValue()){
+      datasetSelectChange();                //First call
+    }
   }
 
   var insertResources = function(response) {
@@ -172,13 +182,22 @@
   ////////////////////////////////////////////////////
 
   var loadDataSets = function() {
+    var start = page++ * MAX_ROWS;
+    make_request(ckan_server + '/api/3/action/dataset_search?rows=' + MAX_ROWS + '&start=' + 
+                 start, 'GET', insertDatasets, showError);
+  }
+
+  var loadInitialDataSets = function() {
     dataset_select.clear();               //Remove previous datasets
     resource_select.clear();              //Remove associated resources to the dataset
     resource_select_title.innerHTML = ''  //Remove dataset name
     hideError();                          //Hide error message
+    $(load_more).removeClass('hidden');   //Display the load_more button
+    page = 0;                             //Reset the page number
 
     //Fullfill the list of datasets
-    make_request(ckan_server + '/api/3/action/dataset_search', 'GET', insertDatasets, showError);
+    loadDataSets();
+
   }
 
 
@@ -199,13 +218,20 @@
     // Update Icon
     var updateIcon = document.createElement('i');
     updateIcon.className = 'icon-refresh pointer-cursor';
-    updateIcon.addEventListener('click', loadDataSets.bind(this));
+    updateIcon.addEventListener('click', loadInitialDataSets.bind(this));
     title.appendChild(updateIcon);
 
     //Create the dataset select
     dataset_select = new StyledElements.StyledSelect({'class': 'full'});
     dataset_select.addEventListener('change', datasetSelectChange);
     layout.getCenterContainer().appendChild(dataset_select);
+
+    //Create the button to add more datasets
+    load_more = document.createElement('a');
+    load_more.setAttribute('class', 'pointer-cursor')
+    load_more.innerHTML = '<i class="icon-download"></i> Load more datasets...';
+    load_more.addEventListener('click', loadDataSets.bind(this));
+    layout.getCenterContainer().appendChild(load_more);
 
     //Create the resource title
     resource_select_title = document.createElement('p');
@@ -231,7 +257,7 @@
     layout.repaint();
 
     // Initial load
-    loadDataSets();
+    loadInitialDataSets();
 
     MashupPlatform.widget.context.registerCallback(function (changes) {
       if ('widthInPixels' in changes || 'heightInPixels' in changes) {
