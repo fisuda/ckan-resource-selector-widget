@@ -1,49 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<!-- The Template core element. This element is mandatory -->
-<Template xmlns="http://wirecloud.conwet.fi.upm.es/ns/template#">
-
-    <!-- Catalog.ResourceDescription element. This element defines the core metadata of the widget -->
-    <Catalog.ResourceDescription>
-        <Vendor>CoNWeT</Vendor>
-        <Name>CKAN Resource Selector</Name>
-        <Version>1.0.1</Version>
-        <DisplayName>CKAN Resource Selector</DisplayName>
-        <Author>amagan</Author>
-        <Mail>amagan@conwet.com</Mail>
-        <Description>A widget that allows you to choose between the different resources availables in a CKAN instance</Description>
-        <ImageURI>images/ckan.png</ImageURI>
-        <WikiURI>doc/index.html</WikiURI>
-    </Catalog.ResourceDescription>
-
-    <!-- Platform.Preferences element. It defines user preferences -->
-    <Platform.Preferences>
-        <Preference name="ckan_server" type="text" description="CKAN Server URL" label="CKAN Server URL" default="http://perseo.ls.fi.upm.es:8080"/>
-        <Preference name="limit_rows" type="text" description="Maximum number of rows to return" label="Number of rows to retrieve (resources)" default="100"/>
-    </Platform.Preferences>
-
-    <!-- Platform.StateProperties element. It defines user preferences -->
-    <Platform.StateProperties>
-    </Platform.StateProperties>
-
-    <!-- Platform.Wiring element. It defines both the widget inputs and outputs -->
-    <Platform.Wiring>
-        <OutputEndpoint name="resource" 
-                        type="text" 
-                        label="Resource"
-                        description="The resource (a JSON including the structure and the data)"
-                        friendcode="dataset"/>
-    </Platform.Wiring>
-
-    <!-- Platform.Link element. It binds the template with the actual widget's source code. -->
-    <Platform.Link>
-        <!-- XHTML element. It has the href attribute that links to the source code of the widget. -->
-        <!--                contenttype and cacheable attributes are optional -->
-        <XHTML href="index.html" contenttype="text/html" cacheable="false" use-platform-style="true"/>
-
-    </Platform.Link>
-
-    <!-- Platform.Rendering element. It specifies the default width and height of the widget -->
-    <Platform.Rendering width="5" height="27"/>
-
-</Template>
+<?xml version='1.0' encoding='UTF-8'?>
+<widget xmlns="http://wirecloud.conwet.fi.upm.es/ns/macdescription/1" vendor="CoNWeT" name="CKAN Resource Selector" version="1.0.1">
+    <details>
+        <title>CKAN Resource Selector</title>
+        <email>amagan@conwet.com</email>
+        <image>images/ckan.png</image>
+        <description>A widget that allows you to choose between the different resources availables in a CKAN instance</description>
+        <doc>doc/index.html</doc>
+        <authors>amagan</authors>
+    </details>
+    <preferences>
+        <preference name="ckan_server" type="text" label="CKAN Server URL" description="CKAN Server URL" default="http://perseo.ls.fi.upm.es:8080"/>
+        <preference name="limit_rows" type="text" label="Number of rows to retrieve (resources)" description="Maximum number of rows to return" default="100"/>
+    </preferences>
+    <wiring>
+        <outputendpoint name="resource" type="text" label="Resource" description="The resource (a JSON including the structure and the data)" friendcode="dataset"/>
+    </wiring>
+    <contents src="index.html" cacheable="false" useplatformstyle="true"/>
+    <rendering width="5" height="27"/>
+</widget>
