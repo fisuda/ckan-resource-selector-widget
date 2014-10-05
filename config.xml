@@ -7,7 +7,7 @@
     <Catalog.ResourceDescription>
         <Vendor>CoNWeT</Vendor>
         <Name>CKAN Resource Selector</Name>
-        <Version>1.0.0</Version>
+        <Version>1.0.1</Version>
         <DisplayName>CKAN Resource Selector</DisplayName>
         <Author>amagan</Author>
         <Mail>amagan@conwet.com</Mail>
@@ -19,7 +19,6 @@
     <!-- Platform.Preferences element. It defines user preferences -->
     <Platform.Preferences>
         <Preference name="ckan_server" type="text" description="CKAN Server URL" label="CKAN Server URL" default="http://perseo.ls.fi.upm.es:8080"/>
-        <Preference name="auth_token" type="text" description="CKAN Authorization Token" label="CKAN Authorization Token" default=""/>
         <Preference name="limit_rows" type="text" description="Maximum number of rows to return" label="Number of rows to retrieve (resources)" default="100"/>
     </Platform.Preferences>
 

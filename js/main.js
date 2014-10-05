@@ -2,11 +2,9 @@
 
   'use strict';
 
-  var preference_ckan_server = 'ckan_server'
-  var preference_auth_token = 'auth_token'
-  var preference_limit_rows = 'limit_rows'
+  var preference_ckan_server = 'ckan_server';
+  var preference_limit_rows = 'limit_rows';
   var ckan_server = MashupPlatform.prefs.get(preference_ckan_server);
-  var auth_token = MashupPlatform.prefs.get(preference_auth_token);
   var limit_rows = MashupPlatform.prefs.get(preference_limit_rows);
   var layout, dataset_select, resource_select, resource_select_title, connection_info, title, error, load_more, warn;
   var page = 0;
@@ -34,8 +32,9 @@
       method: method,
 
       requestHeaders: {
-        Authorization: auth_token
-      },
+        'X-FI-WARE-OAuth-Token': 'true',
+        'X-FI-WARE-OAuth-Header-Name': 'X-Auth-Token'
+	},
       
       onSuccess: function(response) {
         layout.getCenterContainer().enable();
@@ -61,7 +60,6 @@
 
   var prefHandler = function(preferences) {
     ckan_server = preference_ckan_server in preferences ? preferences[preference_ckan_server] : ckan_server;
-    auth_token = preference_auth_token in preferences ? preferences[preference_auth_token] : auth_token;
     limit_rows = preference_limit_rows in preferences ? preferences[preference_limit_rows] : limit_rows;
     loadInitialDataSets();
     set_connected_to();
