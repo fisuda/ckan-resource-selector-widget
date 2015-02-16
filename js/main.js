@@ -145,7 +145,7 @@
 
     //Hide the add load more datasets button if we get less than MAX_ROWS records
     if (datasets.length < MAX_ROWS) {
-      $(load_more).addClass('hidden');
+      load_more.classList.add('hidden');
     }
 
     //A selected resource means that a dataset is already chosen so we mustn't load a new one
@@ -176,7 +176,7 @@
 
   var showWarn = function(msg) {
     warn.innerHTML = msg
-    $(warn).removeClass('hidden');
+    warn.classList.remove('hidden');
   }
 
   var showError = function(e) {
@@ -187,13 +187,13 @@
       error.innerHTML = 'An error arises processing your request'
     }
 
-    $(error).removeClass('hidden');
+    error.classList.remove('hidden');
   }
 
   var hideErrorAndWarn = function(e) {
-    $(error).addClass('hidden');
-    $(warn).addClass('hidden');
-  }
+    error.classList.add('hidden');
+    warn.classList.add('hidden');
+  };
 
 
   ////////////////////////////////////////////////////
@@ -211,7 +211,7 @@
     resource_select.clear();              //Remove associated resources to the dataset
     resource_select_title.innerHTML = ''  //Remove dataset name
     hideErrorAndWarn();                   //Hide error message
-    $(load_more).removeClass('hidden');   //Display the load_more button
+    load_more.classList.remove('hidden'); //Display the load_more button
     page = 0;                             //Reset the page number
 
     //Fullfill the list of datasets
