@@ -50,9 +50,9 @@
 
   }
 
-  var set_connected_to = function() {
+  var set_connected_to = function set_connected_to() {
     connection_info.innerHTML = 'CKAN Server: ' + ckan_server;
-  }
+  };
 
 
   ///////////////////////
@@ -229,58 +229,63 @@
     layout = new StyledElements.BorderLayout();
     layout.insertInto(document.body);
 
+    var notebook = new StyledElements.StyledNotebook();
+    layout.getCenterContainer().appendChild(notebook);
+
+    var dataset_tab = notebook.createTab({name: "Dataset", closable: false});
+
     //Create the title
     title = document.createElement('h3');
     title.innerHTML = 'CKAN Instance DataSets ';
-    layout.getCenterContainer().appendChild(title);
+    dataset_tab.appendChild(title);
 
-    // Update Icon
-    var updateIcon = document.createElement('i');
-    updateIcon.className = 'icon-refresh pointer-cursor';
-    updateIcon.addEventListener('click', loadInitialDataSets.bind(this));
-    title.appendChild(updateIcon);
+    // Update Button
+    var updateButton = new StyledElements.StyledButton({"class": "icon-refresh", plain: true});
+    updateButton.addEventListener('click', loadInitialDataSets.bind(this));
+    updateButton.insertInto(title);
 
     //Create the dataset select
     dataset_select = new StyledElements.StyledSelect({'class': 'full'});
     dataset_select.addEventListener('change', datasetSelectChange);
-    layout.getCenterContainer().appendChild(dataset_select);
+    dataset_tab.appendChild(dataset_select);
 
     //Create the button to add more datasets
     load_more = document.createElement('a');
-    load_more.setAttribute('class', 'pointer-cursor')
     load_more.innerHTML = '<i class="icon-download"></i> Load more datasets...';
     load_more.addEventListener('click', loadDataSets.bind(this));
-    layout.getCenterContainer().appendChild(load_more);
+    dataset_tab.appendChild(load_more);
+
+    var resource_tab = notebook.createTab({name: "Resource", closable: false});
 
     //Create the resource title
     resource_select_title = document.createElement('p');
-    layout.getCenterContainer().appendChild(resource_select_title);
+    resource_tab.appendChild(resource_select_title);
 
     //Create the resource select
     resource_select = new StyledElements.StyledSelect({'class': 'full'});
     resource_select.addEventListener('change', resourceSelectChange);
-    layout.getCenterContainer().appendChild(resource_select);
+    resource_tab.appendChild(resource_select);
 
     //Create the error div
     error = document.createElement('div');
     error.setAttribute('class', 'alert alert-danger');
-    layout.getCenterContainer().appendChild(error);
+    resource_tab.appendChild(error);
 
     //Create the warn div
     warn = document.createElement('div');
     warn.setAttribute('class', 'alert alert-warn');
-    layout.getCenterContainer().appendChild(warn);
+    resource_tab.appendChild(warn);
 
     //Create the bottom information info
     connection_info = document.createElement('p');
-    set_connected_to();
     layout.getSouthContainer().appendChild(connection_info);
 
-    //Repaint is needed
-    layout.repaint();
-
     // Initial load
+    set_connected_to();
     loadInitialDataSets();
+
+    // Initial repaint
+    layout.repaint();
 
     MashupPlatform.widget.context.registerCallback(function (changes) {
       if ('widthInPixels' in changes || 'heightInPixels' in changes) {
