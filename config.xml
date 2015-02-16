@@ -10,7 +10,7 @@
         <contributors>Álvaro Arranz García &lt;aarranz@conwet.com&gt;</contributors>
     </details>
     <preferences>
-        <preference name="ckan_server" type="text" label="CKAN Server URL" description="CKAN Server URL" default="http://perseo.ls.fi.upm.es:8080"/>
+        <preference name="ckan_server" type="text" label="CKAN Server URL" description="CKAN Server URL" default="https://data.lab.fiware.org"/>
         <preference name="auth_token" type="text" label="CKAN Authorization Token" description="CKAN Authorization Token"/>
         <preference name="limit_rows" type="text" label="Number of rows to retrieve (resources)" description="Maximum number of rows to return" default="100"/>
     </preferences>
