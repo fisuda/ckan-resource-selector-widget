@@ -1,20 +1,3 @@
-div.full {
-    width: 100%;
-}
-
-a {
-    color: #002B67;
-    font-size: small;
-}
-
-h3, p, a {
-    margin: 5px 5px 5px 5px;
-}
-
-.pointer-cursor {
-    cursor: pointer;
-}
-
-.hidden {
-    display: none;
+.full {
+    width: auto;
 }
