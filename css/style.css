@@ -1,3 +1,16 @@
 .full {
     width: auto;
 }
+
+.item {
+    border-bottom: 1px solid #DDD;
+    cursor: pointer;
+}
+
+.container-content {
+    padding: 4px 12px;
+}
+
+.container-content > *:last-child {
+    margin-bottom: 0px;
+}

@@ -8,7 +8,7 @@
   var ckan_server = MashupPlatform.prefs.get(preference_ckan_server);
   var auth_token = MashupPlatform.prefs.get(preference_auth_token);
   var limit_rows = MashupPlatform.prefs.get(preference_limit_rows);
-  var layout, dataset_select, resource_select, resource_select_title, connection_info, title, error, load_more, warn;
+  var layout, notebook, dataset_tab, resource_tab, selected_dataset, selected_resource, resource_select_title, connection_info, title, error, load_more, warn;
   var page = 0;
   var MAX_ROWS = 10;
 
@@ -26,10 +26,8 @@
   //AUXILIAR//
   ////////////
 
-  var make_request = function(url, method, onSuccess, onFailure) {
+  var make_request = function(url, method, onSuccess, onFailure, onComplete) {
 
-    layout.getCenterContainer().disable();  //Disable the center container
-    
     MashupPlatform.http.makeRequest(url, {
       method: method,
 
@@ -37,15 +35,9 @@
         Authorization: auth_token
       },
       
-      onSuccess: function(response) {
-        layout.getCenterContainer().enable();
-        onSuccess.call(this, response);
-      },
-      
-      onFailure: function(response) {
-        layout.getCenterContainer().enable();
-        onFailure.call(this, response);
-      }
+      onSuccess: onSuccess,
+      onFailure: onFailure,
+      onComplete: onComplete
     });
 
   }
@@ -75,21 +67,18 @@
   ////////////////////////////////////////
 
   var datasetSelectChange = function() {
-    var dataset_id = dataset_select.getValue();
-    var dataset_name = dataset_select.getLabel();
-
     hideErrorAndWarn();                     //Hide error message
-    resource_select.clear();                // Remove old resources
-    resource_select_title.innerHTML = 'Select the resource from the <strong>' + dataset_name + 
+    resource_select_title.innerHTML = 'Select the resource from the <strong>' + selected_dataset.title +
         '</strong> dataset that you want to be displayed';
 
-    make_request(ckan_server + '/api/action/dataset_show?id=' + dataset_id, 'GET', insertResources, showError);
+    resource_tab.disable();
+    make_request(ckan_server + '/api/action/dataset_show?id=' + selected_dataset.id, 'GET', insertResources, showError, resource_tab.enable.bind(resource_tab));
   }
 
   var resourceSelectChange = function() {
     hideErrorAndWarn();  //Hide error message
     make_request(ckan_server + '/api/action/datastore_search?limit=' + limit_rows + 
-        '&resource_id=' + resource_select.getValue(), 'GET', pushResourceData, showError);
+        '&resource_id=' + selected_resource.id, 'GET', pushResourceData, showError);
   }
 
 
@@ -132,39 +121,76 @@
     }
   }
 
-  var insertDatasets = function(response) {
-    var response = JSON.parse(response.responseText);
-    var datasets = response['result']['results']
-    var entries = [];
+  var render_datasets = function render_datasets(response) {
+      var response = JSON.parse(response.responseText);
+      var datasets = response.result.results;
 
-    for (var i = 0; i < datasets.length; i++) {
-      entries.push({label: datasets[i]['title'], value: datasets[i]['name']})
-    }
+      var dataset, entry, header, description, tags, tag;
+      dataset_tab.clear();
+      for (var i = 0; i < datasets.length; i++) {
+          dataset = datasets[i];
 
-    dataset_select.addEntries(entries);
+          entry = document.createElement('div');
+          entry.className = 'item';
+          header = document.createElement('h4');
+          header.textContent = dataset.title;
+          entry.appendChild(header);
+          description = document.createElement('p');
+          description.textContent = dataset.notes;
+          entry.appendChild(description);
 
-    //Hide the add load more datasets button if we get less than MAX_ROWS records
-    if (datasets.length < MAX_ROWS) {
-      load_more.classList.add('hidden');
-    }
+          tags = document.createElement('p');
+          for (var j = 0; j < dataset.tags.length; j++) {
+              tag = document.createElement('span');
+              tag.className = 'label label-success';
+              tag.textContent = dataset.tags[j].display_name;
+              tags.appendChild(tag);
+          }
+          entry.appendChild(tags);
 
-    //A selected resource means that a dataset is already chosen so we mustn't load a new one
-    if (!resource_select.getValue()){
-      datasetSelectChange();                //First call
-    }
-  }
+          entry.addEventListener('click', function () {
+              selected_dataset = this;
+              datasetSelectChange();
+              notebook.goToTab(resource_tab);
+          }.bind(dataset), true);
+          dataset_tab.appendChild(entry);
+      }
+
+      //Hide the add load more datasets button if we get less than MAX_ROWS records
+      if (datasets.length < MAX_ROWS) {
+          load_more.classList.add('hidden');
+      }
+  };
 
   var insertResources = function(response) {
-    var dataset = JSON.parse(response.responseText);
-    var resources = dataset['result']['resources'];
-    var entries = [];
+      var dataset = JSON.parse(response.responseText);
+      var resources = dataset.result.resources;
+      var entries = [];
 
-    for (var i = 0; i < resources.length; i++) {
-      var name = resources[i]['name'] == null ? resources[i]['id'] : resources[i]['name'];
-      entries.push({label: name, value: resources[i]['id']})
-    }
+      var resource, entry, header, description, tag;
+      resource_tab.clear();
+      for (var i = 0; i < resources.length; i++) {
+          resource = resources[i];
 
-    resource_select.addEntries(entries);
+          entry = document.createElement('div');
+          entry.className = 'item';
+          header = document.createElement('h4');
+          header.textContent = resource.name != null ? resource.name : resource.id;
+          tag = document.createElement('span');
+          tag.className = 'label label-success';
+          tag.textContent = resource.format;
+          header.appendChild(tag);
+          entry.appendChild(header);
+          description = document.createElement('p');
+          description.textContent = resource.description;
+          entry.appendChild(description);
+
+          entry.addEventListener('click', function () {
+              selected_resource = this;
+              resourceSelectChange();
+          }.bind(resource), true);
+          resource_tab.appendChild(entry);
+      }
 
     resourceSelectChange();               //First call
   }
@@ -203,12 +229,10 @@
   var loadDataSets = function() {
     var start = page++ * MAX_ROWS;
     make_request(ckan_server + '/api/3/action/dataset_search?rows=' + MAX_ROWS + '&start=' + 
-                 start, 'GET', insertDatasets, showError);
-  }
+                 start, 'GET', render_datasets, showError);
+  };
 
   var loadInitialDataSets = function() {
-    dataset_select.clear();               //Remove previous datasets
-    resource_select.clear();              //Remove associated resources to the dataset
     resource_select_title.innerHTML = ''  //Remove dataset name
     hideErrorAndWarn();                   //Hide error message
     load_more.classList.remove('hidden'); //Display the load_more button
@@ -229,25 +253,17 @@
     layout = new StyledElements.BorderLayout();
     layout.insertInto(document.body);
 
-    var notebook = new StyledElements.StyledNotebook();
+    notebook = new StyledElements.StyledNotebook();
     layout.getCenterContainer().appendChild(notebook);
 
-    var dataset_tab = notebook.createTab({name: "Dataset", closable: false});
+    dataset_tab = notebook.createTab({name: "Dataset", closable: false});
 
-    //Create the title
-    title = document.createElement('h3');
-    title.innerHTML = 'CKAN Instance DataSets ';
-    dataset_tab.appendChild(title);
-
+    /*
     // Update Button
     var updateButton = new StyledElements.StyledButton({"class": "icon-refresh", plain: true});
     updateButton.addEventListener('click', loadInitialDataSets.bind(this));
     updateButton.insertInto(title);
-
-    //Create the dataset select
-    dataset_select = new StyledElements.StyledSelect({'class': 'full'});
-    dataset_select.addEventListener('change', datasetSelectChange);
-    dataset_tab.appendChild(dataset_select);
+    */
 
     //Create the button to add more datasets
     load_more = document.createElement('a');
@@ -255,16 +271,11 @@
     load_more.addEventListener('click', loadDataSets.bind(this));
     dataset_tab.appendChild(load_more);
 
-    var resource_tab = notebook.createTab({name: "Resource", closable: false});
+    resource_tab = notebook.createTab({name: "Resource", closable: false});
 
     //Create the resource title
     resource_select_title = document.createElement('p');
     resource_tab.appendChild(resource_select_title);
-
-    //Create the resource select
-    resource_select = new StyledElements.StyledSelect({'class': 'full'});
-    resource_select.addEventListener('change', resourceSelectChange);
-    resource_tab.appendChild(resource_select);
 
     //Create the error div
     error = document.createElement('div');
@@ -279,6 +290,7 @@
     //Create the bottom information info
     connection_info = document.createElement('p');
     layout.getSouthContainer().appendChild(connection_info);
+    layout.getSouthContainer().addClassName('container-content');
 
     // Initial load
     set_connected_to();
