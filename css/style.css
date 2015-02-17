@@ -7,6 +7,10 @@
     cursor: pointer;
 }
 
+.item.disabled {
+    cursor: default;
+}
+
 .container-content {
     padding: 4px 12px;
 }

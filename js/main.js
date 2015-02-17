@@ -41,7 +41,9 @@
     };
 
     var set_connected_to = function set_connected_to() {
-        connection_info.innerHTML = 'CKAN Server: ' + MP.prefs.get('ckan_server');
+        connection_info.clear();
+        connection_info.appendChild(document.createTextNode('CKAN Server: ' + MP.prefs.get('ckan_server')));
+        layout.repaint();
     };
 
 
@@ -144,11 +146,12 @@
                 access_label.className = 'label label-inverse';
                 access_label.textContent = 'PRIVATE';
                 header.appendChild(access_label);
+                entry.classList.add('disabled');
             }
             header.appendChild(document.createTextNode(dataset.title));
             entry.appendChild(header);
             if (dataset.notes) {
-                description = document.createElement('p');
+                description = document.createElement('article');
                 description.innerHTML = marked(dataset.notes);
                 entry.appendChild(description);
             }
@@ -162,7 +165,9 @@
             }
             entry.appendChild(tags);
 
-            entry.addEventListener('click', dataset_item_click.bind(dataset), true);
+            if (!dataset.private) {
+                entry.addEventListener('click', dataset_item_click.bind(dataset), true);
+            }
             dataset_tab.appendChild(entry);
         }
 
@@ -191,7 +196,7 @@
             header = document.createElement('h4');
             header.textContent = resource.name != null ? resource.name : resource.id;
             tag = document.createElement('span');
-            tag.className = 'label label-success';
+            tag.className = 'label label-info';
             tag.textContent = resource.format;
             header.appendChild(tag);
             entry.appendChild(header);
@@ -199,7 +204,7 @@
             description.textContent = resource.description;
             entry.appendChild(description);
 
-            if (resource.webstore_url == 'ckan') {
+            if (resource.datastore_active === true) {
                 entry.addEventListener('click', resource_itemt_click.bind(resource), true);
             } else {
                 entry.classList.add('disabled');
