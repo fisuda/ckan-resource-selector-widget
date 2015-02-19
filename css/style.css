@@ -4,11 +4,6 @@
 
 .item {
     border-bottom: 1px solid #DDD;
-    cursor: pointer;
-}
-
-.item.disabled {
-    cursor: default;
 }
 
 .container-content {

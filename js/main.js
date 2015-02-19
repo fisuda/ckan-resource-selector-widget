@@ -5,8 +5,8 @@
 
     'use strict';
 
-    var layout, notebook, dataset_tab, resource_tab, resource_tab_title, resource_tab_content, selected_dataset, selected_resource, connection_info, error, load_more, warn;
-    var page = 0;
+    var ckan_dataset_source;
+    var layout, notebook, dataset_tab, dataset_tab_content, resource_tab, resource_tab_title, resource_tab_content, selected_dataset, selected_resource, connection_info, pagination, error, warn;
     var MAX_ROWS = 20;
     var MP = MashupPlatform;
 
@@ -24,20 +24,30 @@
     //AUXILIAR//
     ////////////
 
-    var make_request = function make_request(url, method, onSuccess, onFailure, onComplete) {
+    var make_request = function make_request(url, method, onSuccess, onFailure, onComplete, parameters) {
+
+        var headers = {};
+
+        var auth_token = MP.prefs.get('auth_token').trim();
+        if (auth_token !== '') {
+            headers = {
+                'Authentication': auth_token
+            };
+        } else if (MashupPlatform.context.get('fiware_token_available')) {
+            headers = {
+                'X-FI-WARE-OAuth-Token': 'true',
+                'X-FI-WARE-OAuth-Header-Name': 'X-Auth-Token'
+            };
+        }
 
         MashupPlatform.http.makeRequest(url, {
             method: method,
-
-            requestHeaders: {
-                Authorization: MP.prefs.get('auth_token')
-            },
-
+            requestHeaders: headers,
+            parameters: parameters,
             onSuccess: onSuccess,
             onFailure: onFailure,
             onComplete: onComplete
         });
-
     };
 
     var set_connected_to = function set_connected_to() {
@@ -129,12 +139,19 @@
         notebook.goToTab(resource_tab);
     };
 
-    var render_datasets = function render_datasets(response) {
-        response = JSON.parse(response.responseText);
-        var datasets = response.result.results;
+    var process_dataset_search_response = function process_dataset_search_response(onSuccess, onFailure, page, response) {
+        var raw_data = JSON.parse(response.responseText);
+        var search_info = {
+            'resources': raw_data.result.results,
+            'current_page': page,
+            'total_count': parseInt(raw_data.result.count, 10)
+        };
+        onSuccess(search_info.resources, search_info);
+    };
 
-        var dataset, entry, header, access_label, description, tags, tag;
-        dataset_tab.clear();
+    var render_datasets = function render_datasets(datasets) {
+        var dataset, entry, header, header_link, access_label, description, tags, tag;
+        dataset_tab_content.clear();
         for (var i = 0; i < datasets.length; i++) {
             dataset = datasets[i];
 
@@ -147,8 +164,15 @@
                 access_label.textContent = 'PRIVATE';
                 header.appendChild(access_label);
                 entry.classList.add('disabled');
+                header_link = document.createElement('span');
+            } else {
+                header_link = document.createElement('a');
+                header_link.role = "button";
+                header_link.tabindex = "0";
+                header_link.addEventListener('click', dataset_item_click.bind(dataset), true);
             }
-            header.appendChild(document.createTextNode(dataset.title));
+            header_link.textContent = dataset.title;
+            header.appendChild(header_link);
             entry.appendChild(header);
             if (dataset.notes) {
                 description = document.createElement('article');
@@ -165,15 +189,7 @@
             }
             entry.appendChild(tags);
 
-            if (!dataset.private) {
-                entry.addEventListener('click', dataset_item_click.bind(dataset), true);
-            }
-            dataset_tab.appendChild(entry);
-        }
-
-        //Hide the add load more datasets button if we get less than MAX_ROWS records
-        if (datasets.length < MAX_ROWS) {
-            load_more.classList.add('hidden');
+            dataset_tab_content.appendChild(entry);
         }
     };
 
@@ -186,7 +202,7 @@
         var dataset = JSON.parse(response.responseText);
         var resources = dataset.result.resources;
 
-        var resource, entry, header, description, tag;
+        var resource, entry, header, description, format;
         resource_tab_content.clear();
         for (var i = 0; i < resources.length; i++) {
             resource = resources[i];
@@ -194,11 +210,11 @@
             entry = document.createElement('div');
             entry.className = 'item';
             header = document.createElement('h4');
-            header.textContent = resource.name != null ? resource.name : resource.id;
-            tag = document.createElement('span');
-            tag.className = 'label label-info';
-            tag.textContent = resource.format;
-            header.appendChild(tag);
+            format = document.createElement('span');
+            format.className = 'label label-info';
+            format.textContent = resource.format;
+            header.appendChild(format);
+            header.appendChild(document.createTextNode(resource.name != null ? resource.name : resource.id));
             entry.appendChild(header);
             description = document.createElement('p');
             description.textContent = resource.description;
@@ -244,14 +260,6 @@
   //FUNCTION TO LOAD THE DATASETS OF A CKAN INSTANCE//
   ////////////////////////////////////////////////////
 
-    var loadDataSets = function loadDataSets() {
-        var start = page++ * MAX_ROWS;
-        clear_resource_tab();
-        dataset_tab.disable();
-        make_request(MP.prefs.get('ckan_server') + '/api/3/action/dataset_search?rows=' + MAX_ROWS + '&start=' +
-                     start, 'GET', render_datasets, showError, dataset_tab.enable.bind(dataset_tab));
-    };
-
     var clear_resource_tab = function clear_resource_tab() {
         resource_tab_title.clear();
         resource_tab_content.clear();
@@ -260,11 +268,7 @@
 
     var loadInitialDataSets = function loadInitialDataSets() {
         hideErrorAndWarn();                   //Hide error message
-        load_more.classList.remove('hidden'); //Display the load_more button
-        page = 0;                             //Reset the page number
-
-        //Fullfill the list of datasets
-        loadDataSets();
+        ckan_dataset_source.refresh();
     };
 
 
@@ -302,6 +306,10 @@
         layout.getCenterContainer().appendChild(notebook);
 
         dataset_tab = notebook.createTab({name: "Dataset", closable: false});
+        var dataset_tab_layout = new StyledElements.BorderLayout();
+        dataset_tab.appendChild(dataset_tab_layout);
+        dataset_tab_content = dataset_tab_layout.getCenterContainer();
+        dataset_tab_content.addClassName('container-content');
 
         /*
         // Update Button
@@ -310,11 +318,28 @@
         updateButton.insertInto(title);
         */
 
-        //Create the button to add more datasets
-        load_more = document.createElement('a');
-        load_more.innerHTML = '<i class="icon-download"></i> Load more datasets...';
-        load_more.addEventListener('click', loadDataSets.bind(this));
-        dataset_tab.appendChild(load_more);
+
+        ckan_dataset_source = new StyledElements.PaginatedSource({
+            'pageSize': MAX_ROWS,
+            'order_by': '-creation_date',
+            'keywords': '',
+            'scope': 'all',
+            'requestFunc': function (page, options, onSuccess, onError) {
+                var start = page * MAX_ROWS;
+                make_request(MP.prefs.get('ckan_server') + '/api/3/action/dataset_search',
+                             'GET', process_dataset_search_response.bind(null, onSuccess, onError, page), onError, null, {rows: MAX_ROWS, start: start});
+            },
+            'processFunc': render_datasets
+        });
+        ckan_dataset_source.addEventListener('requestStart', function () {
+            clear_resource_tab();
+            dataset_tab.disable();
+        }.bind(this));
+        ckan_dataset_source.addEventListener('requestEnd', dataset_tab.enable.bind(dataset_tab));
+
+        // Add dataset pagination
+        pagination = new StyledElements.PaginationInterface(ckan_dataset_source);
+        dataset_tab_layout.getSouthContainer().appendChild(pagination);
 
         resource_tab = notebook.createTab({name: "Resource", closable: false});
         var resource_tab_layout = new StyledElements.BorderLayout();
