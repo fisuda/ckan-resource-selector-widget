@@ -374,7 +374,7 @@
             'keywords': '',
             'scope': 'all',
             'requestFunc': function (page, options, onSuccess, onError) {
-                var start = page * MAX_ROWS;
+                var start = (page - 1) * MAX_ROWS;
                 make_request(MP.prefs.get('ckan_server') + '/api/3/action/package_search',
                              'GET', process_dataset_search_response.bind(null, onSuccess, onError, page), onError, null, {rows: MAX_ROWS, start: start, q: options.keywords});
             },
