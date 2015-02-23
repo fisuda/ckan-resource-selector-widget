@@ -5,7 +5,7 @@
 
     'use strict';
 
-    var ckan_dataset_source;
+    var ckan_dataset_source, textInput;
     var layout, notebook, dataset_tab, dataset_tab_content, resource_tab, resource_tab_title, resource_tab_content, selected_dataset, selected_resource, connection_info, pagination, error, warn;
     var MAX_ROWS = 20;
     var MP = MashupPlatform;
@@ -149,6 +149,14 @@
         onSuccess(search_info.resources, search_info);
     };
 
+    var escapeRegExp = function escapeRegExp(string) {
+        return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    };
+
+    var replaceAll = function replaceAll(string, find, replace) {
+          return string.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+    };
+
     var render_datasets = function render_datasets(datasets) {
         var dataset, entry, header, header_link, access_label, description, tags, tag;
         dataset_tab_content.clear();
@@ -186,6 +194,14 @@
                 tag.className = 'label label-success';
                 tag.textContent = dataset.tags[j].display_name;
                 tags.appendChild(tag);
+                tag.addEventListener('click', function (tagName) {
+                    var keywords = textInput.getValue();
+                    var tagQuery = "tags:" + replaceAll(tagName, " ", "\\ ");
+                    if (keywords.indexOf(tagQuery) === -1) {
+                        keywords = tagQuery + " " + keywords;
+                        ckan_dataset_source.changeOptions({keywords: keywords});
+                    }
+                }.bind(null, dataset.tags[j].name), true);
             }
             entry.appendChild(tags);
 
@@ -276,6 +292,39 @@
     //CREATE THE GRAPHIC ELEMENTS//
     ///////////////////////////////
 
+    var create_search_input = function create_search_input() {
+
+        var southLayout = new StyledElements.HorizontalLayout({'class': 'input input-prepend input-append'});
+
+        // Function to be call when the user clicks on "search" or types "enter"
+        var filter = function filter() {
+            ckan_dataset_source.changeOptions({'keywords': textInput.getValue()});
+        }
+
+        var searchAddon = new StyledElements.Addon({'title': 'Search', 'class': 'btn-primary'});
+        southLayout.getWestContainer().appendChild(searchAddon);
+
+        // Set search icon
+        var searchIcon = document.createElement('i');
+        searchIcon.className = 'icon-search';
+        searchAddon.appendChild(searchIcon);
+
+        // Set input field
+        textInput = new StyledElements.StyledTextField({placeholder: 'Filter'});
+        textInput.addEventListener('submit', filter.bind(this));
+        southLayout.getCenterContainer().appendChild(textInput);
+        searchAddon.assignInput(textInput);
+
+        // Set search button
+        var search_button = new StyledElements.StyledButton({
+            text: 'Search'
+        });
+        search_button.addEventListener('click', filter.bind(this));
+        southLayout.getEastContainer().appendChild(search_button);
+
+        return southLayout;
+    };
+
     var init = function init() {
 
         var markdown_renderer = new marked.Renderer();
@@ -326,16 +375,23 @@
             'scope': 'all',
             'requestFunc': function (page, options, onSuccess, onError) {
                 var start = page * MAX_ROWS;
-                make_request(MP.prefs.get('ckan_server') + '/api/3/action/dataset_search',
-                             'GET', process_dataset_search_response.bind(null, onSuccess, onError, page), onError, null, {rows: MAX_ROWS, start: start});
+                make_request(MP.prefs.get('ckan_server') + '/api/3/action/package_search',
+                             'GET', process_dataset_search_response.bind(null, onSuccess, onError, page), onError, null, {rows: MAX_ROWS, start: start, q: options.keywords});
             },
             'processFunc': render_datasets
         });
+        ckan_dataset_source.addEventListener('optionsChanged', function (source, options) {
+            textInput.setValue(options.keywords);
+        }.bind(this));
+
         ckan_dataset_source.addEventListener('requestStart', function () {
             clear_resource_tab();
             dataset_tab.disable();
         }.bind(this));
         ckan_dataset_source.addEventListener('requestEnd', dataset_tab.enable.bind(dataset_tab));
+
+        // Add search input
+        dataset_tab_layout.getNorthContainer().appendChild(create_search_input());
 
         // Add dataset pagination
         pagination = new StyledElements.PaginationInterface(ckan_dataset_source);
