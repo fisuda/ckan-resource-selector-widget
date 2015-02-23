@@ -394,7 +394,9 @@
         dataset_tab_layout.getNorthContainer().appendChild(create_search_input());
 
         // Add dataset pagination
-        pagination = new StyledElements.PaginationInterface(ckan_dataset_source);
+        pagination = new StyledElements.PaginationInterface(ckan_dataset_source, {
+            layout: '<s:styledgui xmlns:s="http://wirecloud.conwet.fi.upm.es/StyledElements" xmlns:t="http://wirecloud.conwet.fi.upm.es/Template" xmlns="http://www.w3.org/1999/xhtml"><t:firstBtn/><t:prevBtn/><div class="box">Page: <t:currentPage/>/<t:totalPages/></div><t:nextBtn/><t:lastBtn/> <strong><t:totalCount/> datasets found</strong></s:styledgui>'
+        });
         dataset_tab_layout.getSouthContainer().appendChild(pagination);
 
         resource_tab = notebook.createTab({name: "Resource", closable: false});
