@@ -175,8 +175,8 @@
                 header_link = document.createElement('span');
             } else {
                 header_link = document.createElement('a');
-                header_link.role = "button";
-                header_link.tabindex = "0";
+                header_link.setAttribute('role', 'button');
+                header_link.setAttribute('tabindex', '0');
                 header_link.addEventListener('click', dataset_item_click.bind(dataset), true);
             }
             header_link.textContent = dataset.title;
