@@ -1,14 +1,26 @@
-1.0.2
-=====
+v1.0.3
+======
 
-* Added this changelog
+- Use the FIWARE Lab's instance of CKAN by default
+- Added support for IdM authentication using WireCloud's credentials
+- Refactored user interface
+- Initial support for filtering datasets using the query language supported by
+  CKAN (based in the lucene syntax). Users can introduce those queries using an
+  input box being the default behaviour searching by keyword (so users don't
+  need to know the lucene sintax). Tag labels can be used for filtering datasets
+  by the associated tag.
 
-1.0.1
-=====
+v1.0.2
+======
 
-* Improved widget's metadata
+- Added this changelog
 
-1.0.0
-=====
+v1.0.1
+======
+
+- Improved widget's metadata
+
+v1.0.0
+======
 
 Initial ckan-resource-selector widget release.
