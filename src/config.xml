@@ -2,12 +2,14 @@
 <widget xmlns="http://wirecloud.conwet.fi.upm.es/ns/macdescription/1" vendor="CoNWeT" name="ckan-resource-selector" version="1.0.3">
     <details>
         <title>CKAN Resource Selector</title>
+        <authors>Aitor Magán &lt;amagan@conwet.com&gt;, Álvaro Arranz García &lt;aarranz@conwet.com&gt;</authors>
         <email>wirecloud@conwet.com</email>
         <image>images/ckan.png</image>
         <description>A widget that allows you to choose between the different resources availables in a CKAN instance</description>
-        <changelog>doc/changelog.md</changelog>
-        <authors>Aitor Magán &lt;amagan@conwet.com&gt;, Álvaro Arranz García &lt;aarranz@conwet.com&gt;</authors>
+        <longdescription>DESCRIPTION.md</longdescription>
         <homepage>https://github.com/wirecloud-fiware/ckan-resource-selector-widget</homepage>
+        <doc>doc/index.html</doc>
+        <changelog>doc/changelog.md</changelog>
         <issuetracker>https://github.com/wirecloud-fiware/ckan-resource-selector-widget/issues</issuetracker>
     </details>
     <preferences>
