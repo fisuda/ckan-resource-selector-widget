@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/*global $*/
+/* global $, MockMP */
 
 
 (function () {
@@ -45,14 +45,47 @@
         return null;
     };
 
+    window.MashupPlatform = new MockMP.MockMP();
+
     describe("CKAN Resource Selector widget", function () {
+
+        var widget = null;
 
         beforeEach(function () {
             loadFixtures('index.html');
+
+            widget = new Widget();
+            widget.init();
+            spyOn(widget.layout, 'repaint').and.callThrough();
         });
 
         afterEach(function () {
+            MashupPlatform.reset();
             clearDocument();
+        });
+
+        it("registers a callback for the 'dataset' endpoint", function () {
+            expect(MashupPlatform.wiring.registerCallback)
+            .toHaveBeenCalledWith("dataset", jasmine.any(Function));
+        });
+
+        it("registers a widget context callback", function () {
+            expect(MashupPlatform.widget.context.registerCallback)
+            .toHaveBeenCalledWith(jasmine.any(Function));
+        });
+
+        it("redraw the graph container when the horizontal is resized", function () {
+            var pref_callback = MashupPlatform.widget.context
+            .registerCallback.calls.argsFor(0)[0];
+            pref_callback({"widthInPixels": 100});
+            expect(widget.layout.repaint).toHaveBeenCalled();
+        });
+
+        it("redraw the graph container when the vertical is resized", function () {
+            var pref_callback = MashupPlatform.widget.context
+            .registerCallback.calls.argsFor(0)[0];
+            pref_callback({"heightInPixels": 100});
+            expect(widget.layout.repaint).toHaveBeenCalled();
         });
 
     });

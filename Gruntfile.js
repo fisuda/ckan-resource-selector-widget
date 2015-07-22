@@ -140,14 +140,14 @@ module.exports = function (grunt) {
                     jshintrc: '.jshintrc-jasmine'
                 },
                 files: {
-                    src: ['src/test/**/*.js', '!src/test/fixtures/']
+                    src: ['src/test/js/**/*.js']
                 }
             }
         },
 
         jasmine: {
           test: {
-            src: ['src/js/*.js'],
+            src: ['src/js/*.js', '!src/js/main.js'],
             options: {
               specs: 'src/test/js/*Spec.js',
               helpers: ['src/test/helpers/*.js'],
@@ -156,6 +156,7 @@ module.exports = function (grunt) {
                 'bower_components/bootstrap/dist/js/bootstrap.js',
                 'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
                 'bower_components/mock-socket/dist/mock-socket.js',
+                'bower_components/mock-applicationmashup/lib/vendor/mockMashupPlatform.js',
                 'src/test/vendor/*.js']
             }
           },
