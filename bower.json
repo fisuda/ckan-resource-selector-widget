@@ -1,9 +1,12 @@
 {
   "name": "ckan-resource-selector",
   "dependencies": {},
-  "exportsOverride": {},
+  "exportsOverride": {
+    "jquery": {
+      "js": "dist/jquery.min.js"
+    }
+  },
   "devDependencies": {
     "jasmine-jquery": "2.0.6"
   }
 }
-
