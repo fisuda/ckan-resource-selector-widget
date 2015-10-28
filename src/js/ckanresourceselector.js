@@ -268,7 +268,8 @@ window.Widget = (function () {
 
             var finalData = {
                 structure: resource.result.fields,
-                data: resource.result.records
+                data: resource.result.records,
+                metadata: this.selected_resource
             };
 
             //Type transformation
