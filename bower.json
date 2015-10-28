@@ -1,13 +1,15 @@
 {
   "name": "ckan-resource-selector",
-  "dependencies": {},
+  "dependencies": {
+    "marked": "0.3.5",
+      "jquery": "~2.1.4"
+  },
   "exportsOverride": {
     "jquery": {
       "js": "dist/jquery.min.js"
+    },
+    "marked": {
+      "js": "marked.min.js"
     }
-  },
-  "devDependencies": {
-    "jasmine-jquery": "2.0.6",
-    "mock-applicationmashup": "~0.0.8"
   }
 }

@@ -52,7 +52,7 @@ module.exports = function (grunt) {
             widget: {
                 options: {
                     mode: 'zip',
-                    archive: 'build/<%= pkg.vendor %>_<%= pkg.name %>_<%= pkg.version %>-dev.wgt'
+                    archive: 'dist/<%= pkg.vendor %>_<%= pkg.name %>_<%= pkg.version %>.wgt'
                 },
                 files: [
                     {
@@ -63,14 +63,16 @@ module.exports = function (grunt) {
                             'doc/**/*',
                             'images/**/*',
                             'index.html',
-                            'config.xml'
+                            'config.xml',
+                            'DESCRIPTION.md'
                         ]
                     },
                     {
                         expand: true,
                         cwd: 'build/lib',
                         src: [
-                            'lib/**/*'
+                            'lib/css/**/*',
+                            'lib/js/**/*'
                         ]
                     },
                     {
@@ -146,38 +148,35 @@ module.exports = function (grunt) {
         },
 
         jasmine: {
-          test: {
-            src: ['src/js/*.js', '!src/js/main.js'],
-            options: {
-              specs: 'src/test/js/*Spec.js',
-              helpers: ['src/test/helpers/*.js'],
-              vendor: ['bower_components/jquery/dist/jquery.js',
-                'bower_components/adapter.js/src/adapter.js',
-                'bower_components/bootstrap/dist/js/bootstrap.js',
-                'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
-                'bower_components/mock-socket/dist/mock-socket.js',
-                'bower_components/mock-applicationmashup/lib/vendor/mockMashupPlatform.js',
-                'src/test/vendor/*.js']
-            }
-          },
+            test: {
+                src: ['src/js/*.js', '!src/js/main.js'],
+                options: {
+                    specs: 'src/test/js/*Spec.js',
+                    helpers: ['src/test/helpers/*.js'],
+                    vendor: ['bower_components/jquery/dist/jquery.js',
+                             'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
+                             'node_modules/mock-applicationmashup/lib/vendor/mockMashupPlatform.js',
+                             'src/test/vendor/*.js']
+                }
+            },
 
-          coverage: {
-            src: '<%= jasmine.test.src %>',
-            options: {
-              helpers: '<%= jasmine.test.options.helpers %>',
-              specs: '<%= jasmine.test.options.specs %>',
-              vendor: '<%= jasmine.test.options.vendor %>',
-              template: require('grunt-template-jasmine-istanbul'),
-              templateOptions : {
-                coverage: 'build/coverage/json/coverage.json',
-                report: [
-                  {type: 'html', options: {dir: 'build/coverage/html'}},
-                  {type: 'cobertura', options: {dir: 'build/coverage/xml'}},
-                  {type: 'text-summary'}
-                ]
-              }
+            coverage: {
+                src: '<%= jasmine.test.src %>',
+                options: {
+                    helpers: '<%= jasmine.test.options.helpers %>',
+                    specs: '<%= jasmine.test.options.specs %>',
+                    vendor: '<%= jasmine.test.options.vendor %>',
+                    template: require('grunt-template-jasmine-istanbul'),
+                    templateOptions : {
+                        coverage: 'build/coverage/json/coverage.json',
+                        report: [
+                            {type: 'html', options: {dir: 'build/coverage/html'}},
+                            {type: 'cobertura', options: {dir: 'build/coverage/xml'}},
+                            {type: 'text-summary'}
+                        ]
+                    }
+                }
             }
-          }
         },
 
     });

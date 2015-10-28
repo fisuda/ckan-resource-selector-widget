@@ -1,7 +1,7 @@
 {
   "vendor": "CoNWeT",
   "name": "ckan-resource-selector",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "repository": {
     "type": "git",
@@ -33,7 +33,7 @@
     "grunt-template-jasmine-istanbul": "^0.3.0",
     "grunt-text-replace": "^0.3.12",
     "jasmine-jquery": "~2.0.6",
-    "grunt-marked": "~0.1.1"
+    "mock-applicationmashup": "^0.1.3"
   },
   "dependencies": {
     "marked": "~0.3.3"
