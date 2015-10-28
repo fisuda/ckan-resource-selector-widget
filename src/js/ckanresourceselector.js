@@ -272,6 +272,8 @@ window.Widget = (function () {
                 metadata: this.selected_resource
             };
 
+            finalData.metadata.ckan_server = MashupPlatform.prefs.get("ckan_server");
+
             //Type transformation
             for (var i = 0; i < finalData.structure.length; i++) {
                 if (finalData.structure[i].type in this.TYPE_MAPPING) {
