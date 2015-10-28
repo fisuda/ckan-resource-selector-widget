@@ -64,11 +64,6 @@
             clearDocument();
         });
 
-        it("registers a callback for the 'dataset' endpoint", function () {
-            expect(MashupPlatform.wiring.registerCallback)
-            .toHaveBeenCalledWith("dataset", jasmine.any(Function));
-        });
-
         it("registers a widget context callback", function () {
             expect(MashupPlatform.widget.context.registerCallback)
             .toHaveBeenCalledWith(jasmine.any(Function));

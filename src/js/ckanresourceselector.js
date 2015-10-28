@@ -117,23 +117,23 @@ window.Widget = (function () {
             'scope': 'all',
             'requestFunc': function (page, options, onSuccess, onError) {
                 var start = (page - 1) * this.MAX_ROWS;
-                make_request(this.MP.prefs.get('ckan_server') + '/api/3/action/package_search',
-                             'GET', process_dataset_search_response.bind(null, onSuccess, onError, page), onError, null, {rows: this.MAX_ROWS, start: start, q: options.keywords});
-            },
-            'processFunc': render_datasets
+                make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/3/action/package_search',
+                                  'GET', process_dataset_search_response.bind(null, onSuccess, onError, page), onError, null, {rows: this.MAX_ROWS, start: start, q: options.keywords});
+            }.bind(this),
+            'processFunc': render_datasets.bind(this)
         });
         this.ckan_dataset_source.addEventListener('optionsChanged', function (source, options) {
             this.textInput.setValue(options.keywords);
         }.bind(this));
 
         this.ckan_dataset_source.addEventListener('requestStart', function () {
-            clear_resource_tab();
+            clear_resource_tab.call(this);
             this.dataset_tab.disable();
         }.bind(this));
         this.ckan_dataset_source.addEventListener('requestEnd', this.dataset_tab.enable.bind(this.dataset_tab));
 
         // Add search input
-        dataset_tab_layout.getNorthContainer().appendChild(create_search_input());
+        dataset_tab_layout.getNorthContainer().appendChild(create_search_input.call(this));
 
         // Add dataset pagination
         this.pagination = new StyledElements.PaginationInterface(this.ckan_dataset_source, {
@@ -165,8 +165,8 @@ window.Widget = (function () {
         this.layout.getSouthContainer().addClassName('container-content');
 
         // Initial load
-        set_connected_to();
-        loadInitialDataSets();
+        set_connected_to.call(this);
+        loadInitialDataSets.call(this);
 
         // Initial repaint
         this.layout.repaint();
@@ -225,7 +225,7 @@ window.Widget = (function () {
 
     var prefHandler = function prefHandler(preferences) {
         loadInitialDataSets();
-        set_connected_to();
+        set_connected_to.call(this);
     };
 
     //MashupPlatform.prefs.registerCallback(prefHandler);
@@ -246,13 +246,13 @@ window.Widget = (function () {
 
         this.resource_tab.repaint();
         this.resource_tab.disable();
-        make_request(this.MP.prefs.get('ckan_server') + '/api/action/dataset_show?id=' + this.selected_dataset.id, 'GET', render_resources, showError, this.resource_tab.enable.bind(this.resource_tab));
+        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/dataset_show?id=' + this.selected_dataset.id, 'GET', render_resources.bind(this), showError.bind(this), this.resource_tab.enable.bind(this.resource_tab));
     };
 
     var resourceSelectChange = function resourceSelectChange() {
         hideErrorAndWarn();  //Hide error message
-        make_request(this.MP.prefs.get('ckan_server') + '/api/action/datastore_search?limit=' + this.MP.prefs.get('limit_rows') +
-                '&resource_id=' + this.selected_resource.id, 'GET', pushResourceData, showError);
+        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/datastore_search?limit=' + this.MP.prefs.get('limit_rows') +
+                     '&resource_id=' + this.selected_resource.id, 'GET', pushResourceData.bind(this), showError.bind(this));
     };
 
 
@@ -291,15 +291,23 @@ window.Widget = (function () {
             }
 
         } else {
-            showError();
+            showError.call(this);
         }
     };
 
-    var dataset_item_click = function dataset_item_click() {
-        this.selected_dataset = this;
-        datasetSelectChange();
-        this.notebook.goToTab(this.resource_tab);
+    var dataset_item_click_builder = function dataset_item_click_builder(dataset) {
+        return function () {
+            this.selected_dataset = dataset;
+            datasetSelectChange.call(this);
+            this.notebook.goToTab(this.resource_tab);
+        }.bind(this);
     };
+
+    // var dataset_item_click = function dataset_item_click() {
+    //     this.selected_dataset = this;
+    //     datasetSelectChange.bind(this);
+    //     this.notebook.goToTab(this.resource_tab);
+    // };
 
     var process_dataset_search_response = function process_dataset_search_response(onSuccess, onFailure, page, response) {
         var raw_data = JSON.parse(response.responseText);
@@ -339,7 +347,7 @@ window.Widget = (function () {
                 header_link = document.createElement('a');
                 header_link.setAttribute('role', 'button');
                 header_link.setAttribute('tabindex', '0');
-                header_link.addEventListener('click', dataset_item_click.bind(dataset), true);
+                header_link.addEventListener('click', dataset_item_click_builder.call(this, dataset), true);
             }
             header_link.textContent = dataset.title;
             header.appendChild(header_link);
@@ -373,9 +381,11 @@ window.Widget = (function () {
         }
     };
 
-    var resource_item_click = function resource_item_click() {
-        this.selected_resource = this;
-        resourceSelectChange();
+    var resource_item_click_builder = function resource_item_click_builder(resource) {
+        return function () {
+            this.selected_resource = resource;
+            resourceSelectChange.call(this);
+        }.bind(this);
     };
 
     var render_resources = function render_resources(response) {
@@ -401,7 +411,7 @@ window.Widget = (function () {
             entry.appendChild(description);
 
             if (resource.datastore_active === true) {
-                entry.addEventListener('click', resource_item_click.bind(resource), true);
+                entry.addEventListener('click', resource_item_click_builder.call(this, resource), true);
             } else {
                 entry.classList.add('disabled');
             }
@@ -436,9 +446,9 @@ window.Widget = (function () {
     };
 
 
-  ////////////////////////////////////////////////////
-  //FUNCTION TO LOAD THE DATASETS OF A CKAN INSTANCE//
-  ////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////
+    //FUNCTION TO LOAD THE DATASETS OF A CKAN INSTANCE//
+    ////////////////////////////////////////////////////
 
     var clear_resource_tab = function clear_resource_tab() {
         this.resource_tab_title.clear();
