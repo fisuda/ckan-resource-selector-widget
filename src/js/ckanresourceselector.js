@@ -350,7 +350,7 @@ window.Widget = (function () {
                 header_link = document.createElement('a');
                 header_link.setAttribute('role', 'button');
                 header_link.setAttribute('tabindex', '0');
-                header_link.addEventListener('click', dataset_item_click_builder.call(this, dataset), true);
+                entry.addEventListener('click', dataset_item_click_builder.call(this, dataset), true);
             }
             header_link.textContent = dataset.title;
             header.appendChild(header_link);
