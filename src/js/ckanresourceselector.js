@@ -306,12 +306,6 @@ window.Widget = (function () {
         }.bind(this);
     };
 
-    // var dataset_item_click = function dataset_item_click() {
-    //     this.selected_dataset = this;
-    //     datasetSelectChange.bind(this);
-    //     this.notebook.goToTab(this.resource_tab);
-    // };
-
     var process_dataset_search_response = function process_dataset_search_response(onSuccess, onFailure, page, response) {
         var raw_data = JSON.parse(response.responseText);
         var search_info = {
