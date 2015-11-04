@@ -1,9 +1,8 @@
 ## v1.0.4
 
-- Fix some bugs that made the widget not working.
-- Add metadata to the data sended via wiring
-- Now the cursor is a pointer in every field and you can click in the full field, not only the name.
-
+- Fix some bugs that made the widget not working
+- Add metadata to the data sent via wiring
+- Now the cursor is a pointer in every field and you can click in the full field, not only the name
 
 ## v1.0.3
 
