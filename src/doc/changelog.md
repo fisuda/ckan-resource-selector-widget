@@ -1,3 +1,7 @@
+## v1.0.5
+
+- Update to CKAN 2.4.x
+
 ## v1.0.4
 
 - Fix some bugs that made the widget not working

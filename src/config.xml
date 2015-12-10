@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<widget xmlns="http://wirecloud.conwet.fi.upm.es/ns/macdescription/1" vendor="CoNWeT" name="ckan-resource-selector" version="1.0.4">
+<widget xmlns="http://wirecloud.conwet.fi.upm.es/ns/macdescription/1" vendor="CoNWeT" name="ckan-resource-selector" version="1.0.5">
     <details>
         <title>CKAN Resource Selector</title>
         <authors>Aitor Magán &lt;amagan@conwet.com&gt;, Álvaro Arranz García &lt;aarranz@conwet.com&gt;</authors>
