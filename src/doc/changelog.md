@@ -1,6 +1,9 @@
 ## v1.0.5
 
 - Update to CKAN 2.4.x
+- Bugfixes:
+
+    - Error changing preferences. [#1](https://github.com/wirecloud-fiware/ckan-resource-selector-widget/issues/1)
 
 ## v1.0.4
 

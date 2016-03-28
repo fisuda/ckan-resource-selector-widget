@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2014-2016 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -224,7 +224,7 @@ window.Widget = (function () {
     ///////////////////////
 
     var prefHandler = function prefHandler(preferences) {
-        loadInitialDataSets();
+        loadInitialDataSets.call(this);
         set_connected_to.call(this);
     };
 
