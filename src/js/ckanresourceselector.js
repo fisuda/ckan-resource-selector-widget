@@ -118,7 +118,7 @@ window.Widget = (function () {
             'requestFunc': function (page, options, onSuccess, onError) {
                 var start = (page - 1) * this.MAX_ROWS;
                 make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/3/action/package_search',
-                                  'GET', process_dataset_search_response.bind(null, onSuccess, onError, page), onError, null, {rows: this.MAX_ROWS, start: start, q: options.keywords});
+                                  process_dataset_search_response.bind(null, onSuccess, onError, page), onError, null, {rows: this.MAX_ROWS, start: start, q: options.keywords});
             }.bind(this),
             'processFunc': render_datasets.bind(this)
         });
@@ -130,7 +130,12 @@ window.Widget = (function () {
             clear_resource_tab.call(this);
             this.dataset_tab.disable();
         }.bind(this));
-        this.ckan_dataset_source.addEventListener('requestEnd', this.dataset_tab.enable.bind(this.dataset_tab));
+        this.ckan_dataset_source.addEventListener('requestEnd', function (source, error) {
+            if (error != null) {
+                showError.call(this, this.dataset_tab_content, error);
+            }
+            this.dataset_tab.enable();
+        }.bind(this));
 
         // Add search input
         dataset_tab_layout.getNorthContainer().appendChild(create_search_input.call(this));
@@ -149,18 +154,7 @@ window.Widget = (function () {
         this.resource_tab_content = resource_tab_layout.getCenterContainer();
         this.resource_tab_content.addClassName('container-content');
 
-        /*Create the error div
-          this.error_element = document.createElement('div');
-          this.error_element.setAttribute('class', 'alert alert-danger');
-          resource_tab.appendChild(this.error_element);
-
-        //Create the warn div
-        this.warn_element = document.createElement('div');
-        this.warn_element.setAttribute('class', 'alert alert-warn');
-        resource_tab.appendChild(this.warn_element);
-        */
-
-        //Create the bottom information info
+        // Create the bottom information info
         this.connection_info = this.layout.getSouthContainer();
         this.layout.getSouthContainer().addClassName('container-content');
 
@@ -186,7 +180,7 @@ window.Widget = (function () {
     //AUXILIAR//
     ////////////
 
-    var make_request = function make_request(url, method, onSuccess, onFailure, onComplete, parameters) {
+    var make_request = function make_request(url, onSuccess, onFailure, onComplete, parameters) {
 
         var headers = {};
 
@@ -203,7 +197,7 @@ window.Widget = (function () {
         }
 
         MashupPlatform.http.makeRequest(url, {
-            method: method,
+            method: 'GET',
             requestHeaders: headers,
             parameters: parameters,
             onSuccess: onSuccess,
@@ -246,13 +240,13 @@ window.Widget = (function () {
 
         this.resource_tab.repaint();
         this.resource_tab.disable();
-        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/package_show?id=' + this.selected_dataset.id, 'GET', render_resources.bind(this), showError.bind(this), this.resource_tab.enable.bind(this.resource_tab));
+        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/package_show?id=' + this.selected_dataset.id, render_resources.bind(this), showError.bind(this, this.resource_tab_content), this.resource_tab.enable.bind(this.resource_tab));
     };
 
     var resourceSelectChange = function resourceSelectChange() {
         hideErrorAndWarn();  //Hide error message
         make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/datastore_search?limit=' + this.MP.prefs.get('limit_rows') +
-                     '&resource_id=' + this.selected_resource.id, 'GET', pushResourceData.bind(this), showError.bind(this));
+                     '&resource_id=' + this.selected_resource.id, pushResourceData.bind(this), showFloatingError.bind(this));
     };
 
 
@@ -294,7 +288,7 @@ window.Widget = (function () {
             }
 
         } else {
-            showError.call(this);
+            showError.call(this, this.dataset_tab_content, "Unexpected response from CKAN");
         }
     };
 
@@ -426,15 +420,50 @@ window.Widget = (function () {
         this.warn_element.classList.remove('hidden');
     };
 
-    var showError = function showError(e) {
+    var buildErrorDiv = function buildErrorDiv(error) {
+        var message, via_header, details;
 
-        if (e && e.status && e.statusText) {
-            this.error_element.innerHTML = e.status + ' - ' + e.statusText;
+        message = document.createElement('div');
+        message.className = "alert alert-danger";
+        // Currently, error details are described using ...
+        if (typeof error === 'string') {
+            // ... directly a string message
+            message.textContent = error;
         } else {
-            this.error_element.innerHTML = 'An error arises processing your request';
+            // ... or a response object
+            // In this case, we are always using the WireCloud's proxy, so we can make some assumptions
+            via_header = error.getHeader('Via');
+            if (error.status === 0) {
+                message.textContent = "Connection error";
+            } else if (via_header == null) {
+                // Error coming from WireCloud's proxy
+                switch (error.status) {
+                case 403:
+                    message.textContent = "You aren't allowed to use the WireCloud proxy. Have you signed off from WireCloud?";
+                    break;
+                case 502:
+                case 504:
+                    details = JSON.parse(error.responseText);
+                    message.textContent = "Error connecting to CKAN: " + details.description;
+                    break;
+                default:
+                    message.textContent = "Unexpected response from WireCloud's proxy";
+                }
+            } else {
+                message.textContent = "Unexpected response from CKAN: " + error.status + " - " + error.statusText;
+            }
         }
 
-        this.error_element.classList.remove('hidden');
+        return message;
+    };
+
+    var showFloatingError = function showFloatingError(error) {
+        // Do nothing for now
+    };
+
+    var showError = function showError(container, error) {
+        container.clear();
+        container.appendChild(buildErrorDiv(error));
     };
 
     var hideErrorAndWarn = function hideErrorAndWarn(e) {
