@@ -4,6 +4,7 @@
 - Bugfixes:
 
     - Error changing preferences. [#1](https://github.com/wirecloud-fiware/ckan-resource-selector-widget/issues/1)
+    - Initial code for reporting connection errors. [#2](https://github.com/wirecloud-fiware/ckan-resource-selector-widget/issues/2)
 
 ## v1.0.4
 
