@@ -191,8 +191,8 @@ window.Widget = (function () {
             };
         } else if (MashupPlatform.context.get('fiware_token_available')) {
             headers = {
-                'X-FI-WARE-OAuth-Token': 'true',
-                'X-FI-WARE-OAuth-Header-Name': 'X-Auth-Token'
+                'X-FIWARE-OAuth-Token': 'true',
+                'X-FIWARE-OAuth-Header-Name': 'X-Auth-Token'
             };
         }
 
