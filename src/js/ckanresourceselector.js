@@ -94,7 +94,7 @@ window.Widget = (function () {
         this.layout = new StyledElements.BorderLayout();
         this.layout.insertInto(document.body);
 
-        this.notebook = new StyledElements.StyledNotebook();
+        this.notebook = new StyledElements.Notebook();
         this.layout.getCenterContainer().appendChild(this.notebook);
 
         this.dataset_tab = this.notebook.createTab({name: "Dataset", closable: false});
@@ -105,7 +105,7 @@ window.Widget = (function () {
 
         /*
         // Update Button
-        var updateButton = new StyledElements.StyledButton({"class": "icon-refresh", plain: true});
+        var updateButton = new StyledElements.Button({"class": "icon-refresh", plain: true});
         updateButton.addEventListener('click', loadInitialDataSets.bind(this));
         updateButton.insertInto(title);
         */
@@ -510,13 +510,13 @@ window.Widget = (function () {
         searchAddon.appendChild(searchIcon);
 
         // Set input field
-        this.textInput = new StyledElements.StyledTextField({placeholder: 'Filter'});
+        this.textInput = new StyledElements.TextField({placeholder: 'Filter'});
         this.textInput.addEventListener('submit', filter.bind(this));
         southLayout.getCenterContainer().appendChild(this.textInput);
         searchAddon.assignInput(this.textInput);
 
         // Set search button
-        var search_button = new StyledElements.StyledButton({
+        var search_button = new StyledElements.Button({
             text: 'Search'
         });
         search_button.addEventListener('click', filter.bind(this));

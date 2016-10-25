@@ -12,6 +12,9 @@
         <changelog>doc/changelog.md</changelog>
         <issuetracker>https://github.com/wirecloud-fiware/ckan-resource-selector-widget/issues</issuetracker>
     </details>
+    <features>
+        <feature name="StyledElements"/>
+    </features>
     <preferences>
         <preference name="ckan_server" type="text" label="CKAN Server URL" description="CKAN Server URL" default="https://data.lab.fiware.org"/>
         <preference name="auth_token" type="text" label="CKAN Authorization Token" description="CKAN Authorization Token"/>
