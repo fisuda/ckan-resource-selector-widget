@@ -14,6 +14,8 @@
  *   limitations under the License.
  */
 
+var ConfigParser = require('wirecloud-config-parser');
+var parser = new ConfigParser('src/config.xml');
 
 module.exports = function (grunt) {
 
@@ -21,7 +23,7 @@ module.exports = function (grunt) {
 
     grunt.initConfig({
 
-        pkg: grunt.file.readJSON('package.json'),
+        metadata: parser.getData(),
 
         bower: {
             install: {
@@ -31,92 +33,6 @@ module.exports = function (grunt) {
                     },
                     targetDir: './build/lib/lib'
                 }
-            }
-        },
-
-        copy: {
-            main: {
-                files: [
-                    {expand: true, cwd: 'src/js', src: '*', dest: 'build/src/js'}
-                ]
-            }
-        },
-
-        strip_code: {
-            multiple_files: {
-                src: ['build/src/js/**/*.js']
-            }
-        },
-
-        compress: {
-            widget: {
-                options: {
-                    mode: 'zip',
-                    archive: 'dist/<%= pkg.vendor %>_<%= pkg.name %>_<%= pkg.version %>.wgt'
-                },
-                files: [
-                    {
-                        expand: true,
-                        cwd: 'src',
-                        src: [
-                            'css/**/*',
-                            'doc/**/*',
-                            'images/**/*',
-                            'index.html',
-                            'config.xml',
-                            'DESCRIPTION.md'
-                        ]
-                    },
-                    {
-                        expand: true,
-                        cwd: 'build/lib',
-                        src: [
-                            'lib/css/**/*',
-                            'lib/js/**/*'
-                        ]
-                    },
-                    {
-                        expand: true,
-                        cwd: 'build/src',
-                        src: [
-                            'js/**/*'
-                        ]
-                    },
-                    {
-                        expand: true,
-                        cwd: '.',
-                        src: [
-                            'LICENSE'
-                        ]
-                    }
-                ]
-            }
-        },
-
-        clean: {
-            build: {
-                src: ['build']
-            },
-            temp: {
-                src: ['build/src']
-            }
-        },
-
-        replace: {
-            version: {
-                overwrite: true,
-                src: ['src/config.xml'],
-                replacements: [{
-                    from: /version=\"[0-9]+\.[0-9]+\.[0-9]+(-dev)?\"/g,
-                    to: 'version="<%= pkg.version %>"'
-                }]
-            }
-        },
-
-        jscs: {
-            src: 'src/js/**/*',
-            options: {
-                config: ".jscsrc"
             }
         },
 
@@ -147,65 +63,161 @@ module.exports = function (grunt) {
             }
         },
 
-        jasmine: {
-            test: {
-                src: ['src/js/*.js', '!src/js/main.js'],
+        jscs: {
+            widget: {
+                src: 'src/js/**/*.js',
                 options: {
-                    specs: 'src/test/js/*Spec.js',
-                    helpers: ['src/test/helpers/*.js'],
-                    vendor: ['bower_components/jquery/dist/jquery.js',
-                             'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
-                             'node_modules/mock-applicationmashup/lib/vendor/mockMashupPlatform.js',
-                             'src/test/vendor/*.js']
+                    config: ".jscsrc"
                 }
             },
-
-            coverage: {
-                src: '<%= jasmine.test.src %>',
+            grunt: {
+                src: 'Gruntfile.js',
                 options: {
-                    helpers: '<%= jasmine.test.options.helpers %>',
-                    specs: '<%= jasmine.test.options.specs %>',
-                    vendor: '<%= jasmine.test.options.vendor %>',
-                    template: require('grunt-template-jasmine-istanbul'),
-                    templateOptions : {
-                        coverage: 'build/coverage/json/coverage.json',
-                        report: [
-                            {type: 'html', options: {dir: 'build/coverage/html'}},
-                            {type: 'cobertura', options: {dir: 'build/coverage/xml'}},
-                            {type: 'text-summary'}
+                    config: ".jscsrc"
+                }
+            }
+        },
+
+        copy: {
+            main: {
+                files: [
+                    {expand: true, cwd: 'src/js', src: '*', dest: 'build/src/js'}
+                ]
+            }
+        },
+
+        strip_code: {
+            multiple_files: {
+                src: ['build/src/js/**/*.js']
+            }
+        },
+
+        compress: {
+            widget: {
+                options: {
+                    mode: 'zip',
+                    archive: 'dist/<%= metadata.vendor %>_<%= metadata.name %>_<%= metadata.version %>.wgt'
+                },
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'src',
+                        src: [
+                            'DESCRIPTION.md',
+                            'css/**/*',
+                            'doc/**/*',
+                            'images/**/*',
+                            'index.html',
+                            'config.xml'
                         ]
+                    },
+                    {
+                        expand: true,
+                        cwd: 'build/lib',
+                        src: [
+                            'lib/**/*'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: 'build/src',
+                        src: [
+                            'js/**/*'
+                        ]
+                    },
+                    {
+                        expand: true,
+                        cwd: '.',
+                        src: [
+                            'LICENSE'
+                        ]
+                    }
+                ]
+            }
+        },
+
+        clean: {
+            build: {
+                src: ['build', 'bower_components']
+            },
+            temp: {
+                src: ['build/src']
+            }
+        },
+
+        karma: {
+            options: {
+                frameworks: ['jasmine'],
+                reporters: ['progress', 'coverage'],
+                browsers: ['Chrome', 'Firefox'],
+                singleRun: true
+            },
+            coverage: {
+                options: {
+                    coverageReporter: {
+                        type: 'html',
+                        dir: 'build/coverage'
+                    },
+                    files: [
+                        'bower_components/jquery/dist/jquery.js',
+                        'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
+                        'node_modules/mock-applicationmashup/lib/vendor/mockMashupPlatform.js',
+                        'test/vendor/*.js',
+                        'test/helpers/*.js',
+                        'src/js/!(main).js',
+                        'test/js/*Spec.js'
+                    ],
+                    preprocessors: {
+                        "src/js/*.js": ['coverage'],
                     }
                 }
             }
         },
 
+        wirecloud: {
+            options: {
+                overwrite: false
+            },
+            publish: {
+                file: 'dist/<%= metadata.vendor %>_<%= metadata.name %>_<%= metadata.version %>.wgt'
+            }
+        }
     });
 
+    grunt.loadNpmTasks('grunt-wirecloud');
     grunt.loadNpmTasks('grunt-bower-task');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-jscs');
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-contrib-jasmine');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks("grunt-jscs");
     grunt.loadNpmTasks('grunt-strip-code');
     grunt.loadNpmTasks('grunt-text-replace');
 
     grunt.registerTask('test', [
         'bower:install',
-        'jshint:grunt',
         'jshint',
+        'jshint:grunt',
         'jscs',
-        'jasmine:coverage'
+        'karma:coverage'
+    ]);
+
+    grunt.registerTask('build', [
+        'clean:temp',
+        'copy:main',
+        'strip_code',
+        'compress:widget'
     ]);
 
     grunt.registerTask('default', [
         'test',
-        'clean:temp',
-        'copy:main',
-        'strip_code',
-        'replace:version',
-        'compress:widget'
+        'build'
+    ]);
+
+    grunt.registerTask('publish', [
+        'default',
+        'wirecloud'
     ]);
 
 };

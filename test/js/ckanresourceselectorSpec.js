@@ -21,8 +21,6 @@
 
     "use strict";
 
-    jasmine.getFixtures().fixturesPath = 'src/test/fixtures/';
-
     var dependencyList = [
         'script',
         'div#jasmine-fixtures',
@@ -52,7 +50,7 @@
         var widget = null;
 
         beforeEach(function () {
-            loadFixtures('index.html');
+            clearDocument();
 
             widget = new Widget();
             widget.init();
@@ -61,7 +59,6 @@
 
         afterEach(function () {
             MashupPlatform.reset();
-            clearDocument();
         });
 
         it("registers a widget context callback", function () {
