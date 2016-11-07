@@ -2,14 +2,21 @@
     "validateIndentation": 4,
     "validateLineBreaks": "LF",
     "validateParameterSeparator": ", ",
-    "disallowEmptyBlocks": true,
+    "disallowEmptyBlocks": {"allExcept": ["comments"]},
     "disallowKeywordsOnNewLine": ["else"],
     "disallowTrailingWhitespace": true,
     "disallowMixedSpacesAndTabs": true,
     "disallowNewlineBeforeBlockStatements": true,
     "disallowFunctionDeclarations": true,
     "disallowSpaceAfterPrefixUnaryOperators": ["++", "--", "+", "-", "~", "!"],
+    "disallowSpaceBeforeBinaryOperators": [
+        ","
+    ],
     "disallowSpaceBeforePostfixUnaryOperators": ["++", "--"],
+    "disallowSpacesInCallExpression": true,
+    "disallowSpacesInNamedFunctionExpression": {
+        "beforeOpeningRoundBrace": true
+    },
     "disallowSpacesInsideArrayBrackets": true,
     "disallowSpacesInsideObjectBrackets": true,
     "disallowSpacesInsideParentheses": true,
@@ -17,6 +24,7 @@
     "requireCapitalizedConstructors": true,
     "requireDotNotation": true,
     "requireSpacesInConditionalExpression": true,
+    "requireSpaceAfterLineComment": true,
     "requireSpaceBeforeObjectValues": true,
     "requireSpaceBeforeBlockStatements": true,
     "requireSpaceBeforeBinaryOperators": [
@@ -68,6 +76,9 @@
     ],
     "requireSpacesInAnonymousFunctionExpression": {
         "beforeOpeningRoundBrace": true,
+        "beforeOpeningCurlyBrace": true
+    },
+    "requireSpacesInNamedFunctionExpression": {
         "beforeOpeningCurlyBrace": true
     },
     "requireCurlyBraces": [

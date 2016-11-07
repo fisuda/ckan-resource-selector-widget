@@ -15,7 +15,7 @@
  */
 
 /* jshint scripturl: true */
-/* global marked, MashupPlatform, StyledElements */
+/* globals marked, MashupPlatform, StyledElements */
 
 window.Widget = (function () {
 
@@ -46,8 +46,8 @@ window.Widget = (function () {
         this.MAX_ROWS = 20;
         this.MP = MashupPlatform;
 
-        //CKAN types must be transformed in JS types
-        //to be used across the different widgets
+        // CKAN types must be transformed in JS types
+        // to be used across the different widgets
         this.TYPE_MAPPING = {
             'text': 'string',
             'numeric': 'number',
@@ -165,20 +165,18 @@ window.Widget = (function () {
         // Initial repaint
         this.layout.repaint();
 
-        /*MashupPlatform.widget.context.registerCallback(function (changes) {
+        /*
+        MashupPlatform.widget.context.registerCallback(function (changes) {
             if ('widthInPixels' in changes || 'heightInPixels' in changes) {
                 this.layout.repaint();
             }
-        });*/
+        });
+        */
     };
 
     /* ==================================================================================
      *  PRIVATE METHODS
      * ================================================================================== */
-
-    ////////////
-    //AUXILIAR//
-    ////////////
 
     var make_request = function make_request(url, onSuccess, onFailure, onComplete, parameters) {
 
@@ -212,25 +210,13 @@ window.Widget = (function () {
         this.layout.repaint();
     };
 
-
-    ///////////////////////
-    //GET THE PREFERENCES//
-    ///////////////////////
-
     var prefHandler = function prefHandler(preferences) {
         loadInitialDataSets.call(this);
         set_connected_to.call(this);
     };
 
-    //MashupPlatform.prefs.registerCallback(prefHandler);
-
-
-    ////////////////////////////////////////
-    //HANDLERS USED WHEN THE SELECT CHANGE//
-    ////////////////////////////////////////
-
     var datasetSelectChange = function datasetSelectChange() {
-        hideErrorAndWarn();                     //Hide error message
+        hideErrorAndWarn();                     // Hide error message
         this.resource_tab_title.clear();
         this.resource_tab_title.appendChild(document.createTextNode('Resources available on the '));
         var strong = document.createElement('strong');
@@ -244,15 +230,11 @@ window.Widget = (function () {
     };
 
     var resourceSelectChange = function resourceSelectChange() {
-        hideErrorAndWarn();  //Hide error message
+        hideErrorAndWarn();  // Hide error message
         make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/datastore_search?limit=' + this.MP.prefs.get('limit_rows') +
                      '&resource_id=' + this.selected_resource.id, pushResourceData.bind(this), showFloatingError.bind(this));
     };
 
-
-    //////////////////////////////////////////////////////////
-    //FUNCTIONS CALLED WHEN THE HTTP REQUEST FINISH WITH 200//
-    //////////////////////////////////////////////////////////
 
     var pushResourceData = function pushResourceData(response) {
 
@@ -268,17 +250,17 @@ window.Widget = (function () {
 
             finalData.metadata.ckan_server = MashupPlatform.prefs.get("ckan_server");
 
-            //Type transformation
+            // Type transformation
             for (var i = 0; i < finalData.structure.length; i++) {
                 if (finalData.structure[i].type in this.TYPE_MAPPING) {
                     finalData.structure[i].type = this.TYPE_MAPPING[finalData.structure[i].type];
                 }
             }
 
-            //Push the data through the wiring
+            // Push the data through the wiring
             MashupPlatform.wiring.pushEvent('resource', JSON.stringify(finalData));
 
-            //Show warn message if limit_rows < resource elements
+            // Show warn message if limit_rows < resource elements
             var resource_total = resource.result.total;
             if (resource_total > this.MP.prefs.get('limit_rows')) {
                 showWarn('<strong>WARNING:</strong> The number of records of the resource is higher ' +
@@ -338,7 +320,7 @@ window.Widget = (function () {
                 header_link = document.createElement('a');
                 header_link.setAttribute('role', 'button');
                 header_link.setAttribute('tabindex', '0');
-                entry.addEventListener('click', dataset_item_click_builder.call(this, dataset), true);
+                entry.addEventListener('click', dataset_item_click_builder.call(this, dataset), false);
             }
             header_link.textContent = dataset.title;
             header.appendChild(header_link);
@@ -355,7 +337,7 @@ window.Widget = (function () {
                 tag.className = 'label label-success';
                 tag.textContent = dataset.tags[j].display_name;
                 tags.appendChild(tag);
-                tag.addEventListener('click', filter_by_tag.bind(null, dataset.tags[j].name), true);
+                tag.addEventListener('click', filter_by_tag.bind(this, dataset.tags[j].name), false);
             }
             entry.appendChild(tags);
 
@@ -363,7 +345,9 @@ window.Widget = (function () {
         }
     };
 
-    var filter_by_tag = function filter_by_tag(tagName) {
+    var filter_by_tag = function filter_by_tag(tagName, event) {
+        event.stopPropagation();
+
         var keywords = this.textInput.getValue();
         var tagQuery = "tags:" + replaceAll(tagName, " ", "\\ ");
         if (keywords.indexOf(tagQuery) === -1) {
@@ -411,9 +395,9 @@ window.Widget = (function () {
     };
 
 
-    ///////////////////////////
-    //SHOW/HIDE ERROR MESSAGE//
-    ///////////////////////////
+    // =========================================================================
+    // SHOW/HIDE ERROR MESSAGE
+    // =========================================================================
 
     var showWarn = function showWarn(msg) {
         this.warn_element.innerHTML = msg;
@@ -467,14 +451,16 @@ window.Widget = (function () {
     };
 
     var hideErrorAndWarn = function hideErrorAndWarn(e) {
-        /*this.error_element.classList.add('hidden');
-        this.warn_element.classList.add('hidden');*/
+        /*
+        this.error_element.classList.add('hidden');
+        this.warn_element.classList.add('hidden');
+        */
     };
 
 
-    ////////////////////////////////////////////////////
-    //FUNCTION TO LOAD THE DATASETS OF A CKAN INSTANCE//
-    ////////////////////////////////////////////////////
+    // =========================================================================
+    // FUNCTION TO LOAD THE DATASETS OF A CKAN INSTANCE
+    // =========================================================================
 
     var clear_resource_tab = function clear_resource_tab() {
         this.resource_tab_title.clear();
@@ -483,14 +469,14 @@ window.Widget = (function () {
     };
 
     var loadInitialDataSets = function loadInitialDataSets() {
-        hideErrorAndWarn();                   //Hide error message
+        hideErrorAndWarn();                   // Hide error message
         this.ckan_dataset_source.refresh();
     };
 
 
-    ///////////////////////////////
-    //CREATE THE GRAPHIC ELEMENTS//
-    ///////////////////////////////
+    // =========================================================================
+    // CREATE THE GRAPHIC ELEMENTS
+    // =========================================================================
 
     var create_search_input = function create_search_input() {
 
