@@ -1,3 +1,8 @@
+## v1.0.6
+
+- Update deprecated IdM authentication headers by the current ones.
+- Upgraded to marked v0.3.6
+
 ## v1.0.5
 
 - Update to CKAN 2.4.x
