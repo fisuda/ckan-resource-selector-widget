@@ -226,13 +226,12 @@ window.Widget = (function () {
 
         this.resource_tab.repaint();
         this.resource_tab.disable();
-        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/package_show?id=' + this.selected_dataset.id, render_resources.bind(this), showError.bind(this, this.resource_tab_content), this.resource_tab.enable.bind(this.resource_tab));
+        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/package_show', render_resources.bind(this), showError.bind(this, this.resource_tab_content), this.resource_tab.enable.bind(this.resource_tab), {id: this.selected_dataset.id});
     };
 
     var resourceSelectChange = function resourceSelectChange() {
         hideErrorAndWarn();  // Hide error message
-        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/datastore_search?limit=' + this.MP.prefs.get('limit_rows') +
-                     '&resource_id=' + this.selected_resource.id, pushResourceData.bind(this), showFloatingError.bind(this));
+        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/datastore_search', pushResourceData.bind(this), showFloatingError.bind(this), {limit: this.MP.prefs.get('limit_rows'), resource_id: this.selected_resource.id});
     };
 
 
