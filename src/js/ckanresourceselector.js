@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-/* jshint scripturl: true */
 /* globals marked, MashupPlatform, StyledElements */
 
 window.Widget = (function () {
 
     'use strict';
+
+    var builder = new StyledElements.GUIBuilder();
+    var DATASET_TEMPLATE = builder.DEFAULT_OPENING + '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><t:link/><t:accesslabel/></h4></div><t:description/><div class="panel-footer"><t:tags/></div></div>' + builder.DEFAULT_CLOSING;
 
     /**
      * Create a new instance of class Widget.
@@ -91,16 +93,16 @@ window.Widget = (function () {
             renderer: markdown_renderer
         });
 
-        this.layout = new StyledElements.BorderLayout();
+        this.layout = new StyledElements.VerticalLayout();
         this.layout.insertInto(document.body);
 
         this.notebook = new StyledElements.Notebook();
-        this.layout.getCenterContainer().appendChild(this.notebook);
+        this.layout.center.appendChild(this.notebook);
 
         this.dataset_tab = this.notebook.createTab({name: "Dataset", closable: false});
-        var dataset_tab_layout = new StyledElements.BorderLayout();
+        var dataset_tab_layout = new StyledElements.VerticalLayout();
         this.dataset_tab.appendChild(dataset_tab_layout);
-        this.dataset_tab_content = dataset_tab_layout.getCenterContainer();
+        this.dataset_tab_content = dataset_tab_layout.center;
         this.dataset_tab_content.addClassName('container-content');
 
         /*
@@ -138,25 +140,25 @@ window.Widget = (function () {
         }.bind(this));
 
         // Add search input
-        dataset_tab_layout.getNorthContainer().appendChild(create_search_input.call(this));
+        dataset_tab_layout.north.appendChild(create_search_input.call(this));
 
         // Add dataset pagination
         this.pagination = new StyledElements.PaginationInterface(this.ckan_dataset_source, {
             layout: '<s:styledgui xmlns:s="http://wirecloud.conwet.fi.upm.es/StyledElements" xmlns:t="http://wirecloud.conwet.fi.upm.es/Template" xmlns="http://www.w3.org/1999/xhtml"><t:firstBtn/><t:prevBtn/><div class="box">Page: <t:currentPage/>/<t:totalPages/></div><t:nextBtn/><t:lastBtn/> <strong><t:totalCount/> datasets found</strong></s:styledgui>'
         });
-        dataset_tab_layout.getSouthContainer().appendChild(this.pagination);
+        dataset_tab_layout.south.appendChild(this.pagination);
 
         this.resource_tab = this.notebook.createTab({name: "Resource", closable: false});
         var resource_tab_layout = new StyledElements.BorderLayout();
         this.resource_tab.appendChild(resource_tab_layout);
-        this.resource_tab_title = resource_tab_layout.getNorthContainer();
+        this.resource_tab_title = resource_tab_layout.north;
         this.resource_tab_title.addClassName('container-content');
-        this.resource_tab_content = resource_tab_layout.getCenterContainer();
+        this.resource_tab_content = resource_tab_layout.center;
         this.resource_tab_content.addClassName('container-content');
 
         // Create the bottom information info
-        this.connection_info = this.layout.getSouthContainer();
-        this.layout.getSouthContainer().addClassName('container-content');
+        this.connection_info = this.layout.south;
+        this.layout.south.addClassName('container-content');
 
         // Initial load
         set_connected_to.call(this);
@@ -231,7 +233,7 @@ window.Widget = (function () {
 
     var resourceSelectChange = function resourceSelectChange() {
         hideErrorAndWarn();  // Hide error message
-        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/datastore_search', pushResourceData.bind(this), showFloatingError.bind(this), {limit: this.MP.prefs.get('limit_rows'), resource_id: this.selected_resource.id});
+        make_request.call(this, this.MP.prefs.get('ckan_server') + '/api/action/datastore_search', pushResourceData.bind(this), showFloatingError.bind(this), null, {limit: this.MP.prefs.get('limit_rows'), resource_id: this.selected_resource.id});
     };
 
 
@@ -300,45 +302,69 @@ window.Widget = (function () {
     };
 
     var render_datasets = function render_datasets(datasets) {
-        var dataset, entry, header, header_link, access_label, description, tags, tag;
+        var dataset, entry;
         this.dataset_tab_content.clear();
         for (var i = 0; i < datasets.length; i++) {
             dataset = datasets[i];
 
-            entry = document.createElement('div');
-            entry.className = 'item';
-            header = document.createElement('h4');
-            if (dataset.private) {
-                access_label = document.createElement('span');
-                access_label.className = 'label label-inverse';
-                access_label.textContent = 'PRIVATE';
-                header.appendChild(access_label);
+            entry = builder.parse(DATASET_TEMPLATE, {
+                accesslabel: function () {
+                    if (dataset.private) {
+                        var accesslabel = document.createElement('span');
+                        accesslabel.className = 'label';
+                        if ('resources' in dataset) {
+                            accesslabel.classList.add('label-info');
+                            accesslabel.textContent = 'ADQUIRED';
+                        } else if (typeof dataset.acquire_url === 'string' && dataset.acquire_url != '') {
+                            accesslabel.classList.add('label-inverse');
+                            accesslabel.textContent = 'ADQUIRE';
+                        } else {
+                            accesslabel.classList.add('label-inverse');
+                            accesslabel.textContent = 'PRIVATE';
+                        }
+                        return accesslabel;
+                    }
+                },
+                description: function () {
+                    var description = document.createElement('article');
+                    description.className = 'panel-body';
+                    if (dataset.notes) {
+                        description.innerHTML = marked(dataset.notes);
+                    } else {
+                        description.textContent = "No description provided";
+                    }
+                    return description;
+                },
+                link: function () {
+                    var header_link;
+
+                    if (dataset.private && !('resources' in dataset)) {
+                        header_link = document.createElement('span');
+                    } else {
+                        header_link = document.createElement('a');
+                        header_link.setAttribute('role', 'button');
+                        header_link.setAttribute('tabindex', '0');
+                    }
+                    header_link.textContent = dataset.title;
+                    return header_link;
+                },
+                tags: function () {
+                    var tags = dataset.tags.map(function (tag) {
+                        var element = document.createElement('span');
+                        element.className = 'label label-success';
+                        element.textContent = tag.display_name;
+                        element.addEventListener('click', filter_by_tag.bind(this, tag.name), false);
+                        return element;
+                    }.bind(this));
+                    return new StyledElements.Fragment(tags);
+                }.bind(this)
+            }).elements[0];
+
+            if (dataset.private && !('resources' in dataset)) {
                 entry.classList.add('disabled');
-                header_link = document.createElement('span');
             } else {
-                header_link = document.createElement('a');
-                header_link.setAttribute('role', 'button');
-                header_link.setAttribute('tabindex', '0');
                 entry.addEventListener('click', dataset_item_click_builder.call(this, dataset), false);
             }
-            header_link.textContent = dataset.title;
-            header.appendChild(header_link);
-            entry.appendChild(header);
-            if (dataset.notes) {
-                description = document.createElement('article');
-                description.innerHTML = marked(dataset.notes);
-                entry.appendChild(description);
-            }
-
-            tags = document.createElement('p');
-            for (var j = 0; j < dataset.tags.length; j++) {
-                tag = document.createElement('span');
-                tag.className = 'label label-success';
-                tag.textContent = dataset.tags[j].display_name;
-                tags.appendChild(tag);
-                tag.addEventListener('click', filter_by_tag.bind(this, dataset.tags[j].name), false);
-            }
-            entry.appendChild(tags);
 
             this.dataset_tab_content.appendChild(entry);
         }
@@ -347,9 +373,12 @@ window.Widget = (function () {
     var filter_by_tag = function filter_by_tag(tagName, event) {
         event.stopPropagation();
 
-        var keywords = this.textInput.getValue();
+        var keywords = this.textInput.value.trim();
         var tagQuery = "tags:" + replaceAll(tagName, " ", "\\ ");
-        if (keywords.indexOf(tagQuery) === -1) {
+        if (keywords === '') {
+            keywords = tagQuery;
+            this.ckan_dataset_source.changeOptions({keywords: keywords});
+        } else if (keywords.indexOf(tagQuery) === -1) {
             keywords = tagQuery + " " + keywords;
             this.ckan_dataset_source.changeOptions({keywords: keywords});
         }
@@ -487,7 +516,7 @@ window.Widget = (function () {
         };
 
         var searchAddon = new StyledElements.Addon({'title': 'Search', 'class': 'btn-primary'});
-        southLayout.getWestContainer().appendChild(searchAddon);
+        southLayout.west.appendChild(searchAddon);
 
         // Set search icon
         var searchIcon = document.createElement('i');
@@ -497,7 +526,7 @@ window.Widget = (function () {
         // Set input field
         this.textInput = new StyledElements.TextField({placeholder: 'Filter'});
         this.textInput.addEventListener('submit', filter.bind(this));
-        southLayout.getCenterContainer().appendChild(this.textInput);
+        southLayout.center.appendChild(this.textInput);
         searchAddon.assignInput(this.textInput);
 
         // Set search button
@@ -505,7 +534,7 @@ window.Widget = (function () {
             text: 'Search'
         });
         search_button.addEventListener('click', filter.bind(this));
-        southLayout.getEastContainer().appendChild(search_button);
+        southLayout.east.appendChild(search_button);
 
         return southLayout;
     };

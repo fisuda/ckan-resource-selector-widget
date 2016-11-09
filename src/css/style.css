@@ -2,11 +2,7 @@
     width: auto;
 }
 
-.item {
-    border-bottom: 1px solid #DDD;
-}
-
-.item:not(.disabled):hover {
+.panel-footer > .label:hover, .item:not(.disabled):hover {
     cursor: pointer;
 }
 
@@ -20,7 +16,7 @@
 }
 
 .container-content {
-    padding: 4px 12px;
+    padding: 4px 3px;
 }
 
 .container-content > *:last-child {
