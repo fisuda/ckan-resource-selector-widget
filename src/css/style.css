@@ -2,8 +2,9 @@
     width: auto;
 }
 
-.panel-footer > .label:hover, .item:not(.disabled):hover {
-    cursor: pointer;
+img.panel-body {
+    max-width: 200px;
+    max-height: 200px;
 }
 
 .item.disabled {
@@ -21,4 +22,8 @@
 
 .container-content > *:last-child {
     margin-bottom: 0px;
+}
+
+.panel-footer > .label:hover, .item:not(.disabled):hover, img.panel-body:hover {
+    cursor: pointer;
 }

@@ -16,12 +16,13 @@
 
 /* globals marked, MashupPlatform, StyledElements */
 
-window.Widget = (function () {
+window.Widget = (function (se) {
 
     'use strict';
 
-    var builder = new StyledElements.GUIBuilder();
-    var DATASET_TEMPLATE = builder.DEFAULT_OPENING + '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><t:link/><t:accesslabel/></h4></div><t:description/><div class="panel-footer"><t:tags/></div></div>' + builder.DEFAULT_CLOSING;
+    var builder = new se.GUIBuilder();
+    var DATASET_TEMPLATE = builder.DEFAULT_OPENING + '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><t:link/><t:accesslabel/></h4></div><t:avatar/><t:description/><div class="panel-footer"><t:tags/></div></div>' + builder.DEFAULT_CLOSING;
+    var RESOURCE_TEMPLATE = builder.DEFAULT_OPENING + '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><t:format/><t:title/></h4></div><t:description/></div>' + builder.DEFAULT_CLOSING;
 
     /**
      * Create a new instance of class Widget.
@@ -93,26 +94,26 @@ window.Widget = (function () {
             renderer: markdown_renderer
         });
 
-        this.layout = new StyledElements.VerticalLayout();
+        this.layout = new se.VerticalLayout();
         this.layout.insertInto(document.body);
 
-        this.notebook = new StyledElements.Notebook();
+        this.notebook = new se.Notebook();
         this.layout.center.appendChild(this.notebook);
 
         this.dataset_tab = this.notebook.createTab({name: "Dataset", closable: false});
-        var dataset_tab_layout = new StyledElements.VerticalLayout();
+        var dataset_tab_layout = new se.VerticalLayout();
         this.dataset_tab.appendChild(dataset_tab_layout);
         this.dataset_tab_content = dataset_tab_layout.center;
         this.dataset_tab_content.addClassName('container-content');
 
         /*
         // Update Button
-        var updateButton = new StyledElements.Button({"class": "icon-refresh", plain: true});
+        var updateButton = new se.Button({"class": "icon-refresh", plain: true});
         updateButton.addEventListener('click', loadInitialDataSets.bind(this));
         updateButton.insertInto(title);
         */
 
-        this.ckan_dataset_source = new StyledElements.PaginatedSource({
+        this.ckan_dataset_source = new se.PaginatedSource({
             'pageSize': this.MAX_ROWS,
             'order_by': '-creation_date',
             'keywords': '',
@@ -143,13 +144,13 @@ window.Widget = (function () {
         dataset_tab_layout.north.appendChild(create_search_input.call(this));
 
         // Add dataset pagination
-        this.pagination = new StyledElements.PaginationInterface(this.ckan_dataset_source, {
-            layout: '<s:styledgui xmlns:s="http://wirecloud.conwet.fi.upm.es/StyledElements" xmlns:t="http://wirecloud.conwet.fi.upm.es/Template" xmlns="http://www.w3.org/1999/xhtml"><t:firstBtn/><t:prevBtn/><div class="box">Page: <t:currentPage/>/<t:totalPages/></div><t:nextBtn/><t:lastBtn/> <strong><t:totalCount/> datasets found</strong></s:styledgui>'
+        this.pagination = new se.PaginationInterface(this.ckan_dataset_source, {
+            layout: builder.DEFAULT_OPENING + '<div class="se-input-group"><t:firstBtn/><t:prevBtn/><div class="box se-box">Page: <t:currentPage/>/<t:totalPages/></div><t:nextBtn/><t:lastBtn/></div> <strong><t:totalCount/> datasets found</strong>' + builder.DEFAULT_CLOSING
         });
         dataset_tab_layout.south.appendChild(this.pagination);
 
         this.resource_tab = this.notebook.createTab({name: "Resource", closable: false});
-        var resource_tab_layout = new StyledElements.BorderLayout();
+        var resource_tab_layout = new se.VerticalLayout();
         this.resource_tab.appendChild(resource_tab_layout);
         this.resource_tab_title = resource_tab_layout.north;
         this.resource_tab_title.addClassName('container-content');
@@ -325,6 +326,15 @@ window.Widget = (function () {
                         return accesslabel;
                     }
                 },
+                avatar: function () {
+                    if (dataset.organization != null) {
+                        var avatar = document.createElement('img');
+                        avatar.className = "panel-body";
+                        avatar.src = new URL(dataset.organization.image_url, new URL('uploads/group/', this.MP.prefs.get('ckan_server')));
+                        avatar.addEventListener('click', filter_by_org.bind(this, dataset.organization.name), false);
+                        return avatar;
+                    }
+                }.bind(this),
                 description: function () {
                     var description = document.createElement('article');
                     description.className = 'panel-body';
@@ -356,7 +366,7 @@ window.Widget = (function () {
                         element.addEventListener('click', filter_by_tag.bind(this, tag.name), false);
                         return element;
                     }.bind(this));
-                    return new StyledElements.Fragment(tags);
+                    return new se.Fragment(tags);
                 }.bind(this)
             }).elements[0];
 
@@ -370,18 +380,27 @@ window.Widget = (function () {
         }
     };
 
-    var filter_by_tag = function filter_by_tag(tagName, event) {
+    var filter_by = function filter_by(query, event) {
         event.stopPropagation();
 
         var keywords = this.textInput.value.trim();
-        var tagQuery = "tags:" + replaceAll(tagName, " ", "\\ ");
         if (keywords === '') {
-            keywords = tagQuery;
+            keywords = query;
             this.ckan_dataset_source.changeOptions({keywords: keywords});
-        } else if (keywords.indexOf(tagQuery) === -1) {
-            keywords = tagQuery + " " + keywords;
+        } else if (keywords.indexOf(query) === -1) {
+            keywords = query + " " + keywords;
             this.ckan_dataset_source.changeOptions({keywords: keywords});
         }
+    };
+
+    var filter_by_org = function filter_by_org(name, event) {
+        var query = "organization:" + replaceAll(name, " ", "\\ ");
+        filter_by.call(this, query, event);
+    };
+
+    var filter_by_tag = function filter_by_tag(name, event) {
+        var query = "tags:" + replaceAll(name, " ", "\\ ");
+        filter_by.call(this, query, event);
     };
 
     var resource_item_click_builder = function resource_item_click_builder(resource) {
@@ -395,31 +414,34 @@ window.Widget = (function () {
         var dataset = JSON.parse(response.responseText);
         var resources = dataset.result.resources;
 
-        var resource, entry, header, description, format;
         this.resource_tab_content.clear();
-        for (var i = 0; i < resources.length; i++) {
-            resource = resources[i];
+        resources.forEach(function (resource) {
+            var entry;
+            var entry = builder.parse(RESOURCE_TEMPLATE, {
+                description: function () {
+                    if (resource.description) {
+                        var description = document.createElement('article');
+                        description.className = 'panel-body';
+                        description.innerHTML = marked(resource.description);
+                        return description;
+                    }
+                },
+                format: function () {
+                    var format = document.createElement('span');
+                    format.className = 'label label-info';
+                    format.textContent = resource.format;
+                    return format;
+                },
+                title: resource.name != null ? resource.name : resource.id,
+            }).elements[0];
 
-            entry = document.createElement('div');
-            entry.className = 'item';
-            header = document.createElement('h4');
-            format = document.createElement('span');
-            format.className = 'label label-info';
-            format.textContent = resource.format;
-            header.appendChild(format);
-            header.appendChild(document.createTextNode(resource.name != null ? resource.name : resource.id));
-            entry.appendChild(header);
-            description = document.createElement('p');
-            description.textContent = resource.description;
-            entry.appendChild(description);
-
-            if (resource.datastore_active === true) {
+            if (resource.datastore_active === true || resource.webstore_url === "active") {
                 entry.addEventListener('click', resource_item_click_builder.call(this, resource), true);
             } else {
                 entry.classList.add('disabled');
             }
             this.resource_tab_content.appendChild(entry);
-        }
+        }, this);
     };
 
 
@@ -508,14 +530,14 @@ window.Widget = (function () {
 
     var create_search_input = function create_search_input() {
 
-        var southLayout = new StyledElements.HorizontalLayout({'class': 'input input-prepend input-append'});
+        var southLayout = new se.HorizontalLayout({'class': 'input input-prepend input-append'});
 
         // Function to be call when the user clicks on "search" or types "enter"
         var filter = function filter() {
             this.ckan_dataset_source.changeOptions({'keywords': this.textInput.getValue()});
         };
 
-        var searchAddon = new StyledElements.Addon({'title': 'Search', 'class': 'btn-primary'});
+        var searchAddon = new se.Addon({'title': 'Search', 'class': 'btn-primary'});
         southLayout.west.appendChild(searchAddon);
 
         // Set search icon
@@ -524,13 +546,13 @@ window.Widget = (function () {
         searchAddon.appendChild(searchIcon);
 
         // Set input field
-        this.textInput = new StyledElements.TextField({placeholder: 'Filter'});
+        this.textInput = new se.TextField({placeholder: 'Filter'});
         this.textInput.addEventListener('submit', filter.bind(this));
         southLayout.center.appendChild(this.textInput);
         searchAddon.assignInput(this.textInput);
 
         // Set search button
-        var search_button = new StyledElements.Button({
+        var search_button = new se.Button({
             text: 'Search'
         });
         search_button.addEventListener('click', filter.bind(this));
@@ -541,4 +563,4 @@ window.Widget = (function () {
 
     return Widget;
 
-})();
+})(StyledElements);
