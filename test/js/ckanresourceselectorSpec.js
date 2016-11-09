@@ -53,31 +53,92 @@
             clearDocument();
 
             widget = new Widget();
-            widget.init();
-            spyOn(widget.layout, 'repaint').and.callThrough();
         });
 
         afterEach(function () {
             MashupPlatform.reset();
         });
 
-        it("registers a widget context callback", function () {
-            expect(MashupPlatform.widget.context.registerCallback)
-            .toHaveBeenCalledWith(jasmine.any(Function));
+        describe("", function () {
+
+            beforeEach(function () {
+                widget.init();
+            });
+
+            it("registers a widget context callback", function () {
+                expect(MashupPlatform.widget.context.registerCallback).toHaveBeenCalledWith(jasmine.any(Function));
+            });
+
+            it("redraw the graph container when the horizontal is resized", function () {
+                spyOn(widget.layout, 'repaint').and.callThrough();
+
+                var pref_callback = MashupPlatform.widget.context.registerCallback.calls.argsFor(0)[0];
+                pref_callback({widthInPixels: 100});
+                expect(widget.layout.repaint).toHaveBeenCalled();
+            });
+
+            it("redraw the graph container when the vertical is resized", function () {
+                spyOn(widget.layout, 'repaint').and.callThrough();
+
+                var pref_callback = MashupPlatform.widget.context.registerCallback.calls.argsFor(0)[0];
+                pref_callback({heightInPixels: 100});
+                expect(widget.layout.repaint).toHaveBeenCalled();
+            });
+
         });
 
-        it("redraw the graph container when the horizontal is resized", function () {
-            var pref_callback = MashupPlatform.widget.context
-            .registerCallback.calls.argsFor(0)[0];
-            pref_callback({"widthInPixels": 100});
-            expect(widget.layout.repaint).toHaveBeenCalled();
+        it("handles dataset tags", function () {
+            MashupPlatform.setStrategy({
+                'http.makeRequest': function (url, options) {
+                    options.onSuccess({
+                        responseText: '{"result": {"results": [{"private": false, "tags": [{"display_name": "oneTag", "name": "onetag"}]}]}}'
+                    })
+                }
+            });
+
+            widget.init();
+
+            var dataset = widget.layout.wrapperElement.querySelector('.panel');
+            var tags = dataset.querySelectorAll('.panel-footer .label');
+            expect(tags.length).toBe(1);
+            expect(tags[0].textContent).toBe("oneTag");
+            tags[0].click();
+            var searchinput = widget.layout.wrapperElement.querySelector('input');
+            expect(searchinput.value).toBe('tags:onetag')
         });
 
-        it("redraw the graph container when the vertical is resized", function () {
-            var pref_callback = MashupPlatform.widget.context
-            .registerCallback.calls.argsFor(0)[0];
-            pref_callback({"heightInPixels": 100});
-            expect(widget.layout.repaint).toHaveBeenCalled();
+        it("handles private datasets", function () {
+            MashupPlatform.setStrategy({
+                'http.makeRequest': function (url, options) {
+                    options.onSuccess({
+                        responseText: '{"result": {"results": [{"private": true, "tags": []}]}}'
+                    })
+                }
+            });
+
+            widget.init();
+
+            var dataset = widget.layout.wrapperElement.querySelector('.panel');
+            expect(dataset.className).toContain('disabled');
+            var label = dataset.querySelector('.label');
+            expect(label.textContent).toBe('PRIVATE');
+        });
+
+        it("handles adquired datasets", function () {
+            MashupPlatform.setStrategy({
+                'http.makeRequest': function (url, options) {
+                    options.onSuccess({
+                        responseText: '{"result": {"results": [{"private": true, "resources": [], "tags": []}]}}'
+                    })
+                }
+            });
+
+            widget.init();
+
+            var dataset = widget.layout.wrapperElement.querySelector('.panel');
+            expect(dataset.className).not.toContain('disabled');
+            var label = dataset.querySelector('.label');
+            expect(label.textContent).toBe('ADQUIRED');
         });
 
     });
