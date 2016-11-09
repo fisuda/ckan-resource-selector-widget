@@ -1,8 +1,5 @@
 {
   "description": "This package.json file is only used for installing npm dependencies. But this is not an installable node package, but a WireCloud widget. Take a look into src/config.xml for more details about this widget",
-  "dependencies": {
-    "marked": "~0.3.3"
-  },
   "devDependencies": {
     "bower": "^1.3.12",
     "grunt": "^0.4.5",
