@@ -27,3 +27,7 @@ img.panel-body {
 .panel-footer > .label:hover, .item:not(.disabled):hover, img.panel-body:hover {
     cursor: pointer;
 }
+
+#spinner {
+    margin-left: 10px;
+}

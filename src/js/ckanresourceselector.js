@@ -22,7 +22,8 @@ window.Widget = (function (se) {
 
     var builder = new se.GUIBuilder();
     var DATASET_TEMPLATE = builder.DEFAULT_OPENING + '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><t:link/><t:accesslabel/></h4></div><t:avatar/><t:description/><div class="panel-footer"><t:tags/></div></div>' + builder.DEFAULT_CLOSING;
-    var RESOURCE_TEMPLATE = builder.DEFAULT_OPENING + '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><t:format/><t:title/></h4></div><t:description/></div>' + builder.DEFAULT_CLOSING;
+    var RESOURCE_TEMPLATE = builder.DEFAULT_OPENING + '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><t:format/><t:link/></h4></div><t:description/></div>' + builder.DEFAULT_CLOSING;
+    var spinner;
 
     /**
      * Create a new instance of class Widget.
@@ -265,6 +266,10 @@ window.Widget = (function (se) {
             // Push the data through the wiring
             MashupPlatform.wiring.pushEvent('resource', JSON.stringify(finalData));
 
+            // Remove the loading spinner
+            spinner.parentNode.removeChild(spinner);
+            spinner = null;
+
             // Show warn message if limit_rows < resource elements
             var resource_total = resource.result.total;
             if (resource_total > this.MP.prefs.get('limit_rows')) {
@@ -407,10 +412,8 @@ window.Widget = (function (se) {
     };
 
     var resource_item_click_builder = function resource_item_click_builder(resource) {
-        return function () {
-            this.selected_resource = resource;
-            resourceSelectChange.call(this);
-        }.bind(this);
+        this.selected_resource = resource;
+        resourceSelectChange.call(this);
     };
 
     var render_resources = function render_resources(response) {
@@ -435,11 +438,30 @@ window.Widget = (function (se) {
                     format.textContent = resource.format;
                     return format;
                 },
-                title: resource.name != null ? resource.name : resource.id,
+                link: function () {
+                    var header_link;
+
+                    if (resource.datastore_active === true || resource.webstore_url === "active") {
+                        header_link = document.createElement('a');
+                        header_link.setAttribute('role', 'button');
+                        header_link.setAttribute('tabindex', '0');
+                    } else {
+                        header_link = document.createElement('span');
+                    }
+                    header_link.textContent = resource.name != null ? resource.name : resource.id;
+                    return header_link;
+                }
             }).elements[0];
 
             if (resource.datastore_active === true || resource.webstore_url === "active") {
-                entry.addEventListener('click', resource_item_click_builder.call(this, resource), true);
+                entry.addEventListener('click', function () {
+                    spinner = document.createElement("div");
+                    spinner.className = "fa fa-spinner fa-spin";
+                    spinner.id = "spinner";
+
+                    entry.firstChild.firstChild.children[1].appendChild(spinner);
+                    resource_item_click_builder.call(this, resource);
+                }.bind(this), true);
             } else {
                 entry.classList.add('disabled');
             }
