@@ -8,7 +8,7 @@
         <description>A widget that allows you to choose between the different resources availables in a CKAN instance</description>
         <longdescription>DESCRIPTION.md</longdescription>
         <homepage>https://github.com/wirecloud-fiware/ckan-resource-selector-widget</homepage>
-        <doc>doc/index.md</doc>
+        <doc>doc/userguide.md</doc>
         <changelog>doc/changelog.md</changelog>
         <issuetracker>https://github.com/wirecloud-fiware/ckan-resource-selector-widget/issues</issuetracker>
     </details>
